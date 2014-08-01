@@ -1,0 +1,22 @@
+# General stuff
+.DS_Store
+.shastore
+
+# Python stuff
+*.pyc
+
+# Corpus stuff
+*.db
+Corpora/*.db
+
+# R stuff
+*.Rapp.history
+*.RData
+*.RDataTmp
+*.Rhistory
+
+# MALLET stuff
+mallet/*
+
+# Publication stuff
+Output/*

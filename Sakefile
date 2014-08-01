@@ -1,0 +1,70 @@
+---
+generate data:
+    help: load and process all data from corpora
+    export articles:
+        help: export articles from SQLite databases and stem and n-gram them
+        dependencies: 
+            - ./Python/export_to_mallet.py
+            - ./Corpora/egypt_independent.db
+            - ./Corpora/ahram.db
+            - ./Corpora/dne.db
+        formula: >
+            mkdir Output/articles 2>/dev/null || true;
+            python3 Python/export_to_mallet.py Corpora/egypt_independent.db egypt_independent Output/articles;
+            python3 Python/export_to_mallet.py Corpora/ahram.db ahram Output/articles;
+            python3 Python/export_to_mallet.py Corpora/dne.db dne Output/articles;
+        output: 
+            - ./Output/articles/*.txt
+    clean and process articles:
+        help: stem and clean up exported articles
+        dependencies: 
+            - ./Python/process_natural_language.py
+            - ./Output/articles/*.txt
+        formula: >
+            mkdir Output/articles_stemmed 2>/dev/null || true; 
+            python2 Python/process_natural_language.py Output/articles/ Output/articles_stemmed Corpora/stopwords.txt Output/bigrams.csv
+        output:
+            - ./Output/articles_stemmed/*.txt
+            - ./Output/bigrams.csv
+
+
+analyze data:
+    help: load data and build all models
+    load data into R: 
+        help: load NGO articles into R (this can take a while...)
+        dependencies: 
+            - ./R/load_data.R
+        formula: >
+            cd R; Rscript load_data.R
+        output: 
+            - ./Output/media_data.RData
+    build topic model:
+        help: create a topic model using the stemmed articles
+        dependencies:
+            - ./R/create_topic_model.R
+        formula: >
+            cd R; Rscript create_topic_model.R
+        output: 
+            - ./Output/topic_model.RData
+            - ./Output/topics.mallet
+            - ./Output/topic-state.gz
+            - ./Output/topic-keys.txt
+            - ./Output/topic-doctopics.txt
+            - ./Output/topic-docs.csv
+
+
+generate output:
+    help: generate all output for the paper and presentation
+    output summary tables: 
+        help: "summary tables of corpus, NGOs, and model"
+        dependencies:
+            - ./Output/topic_model.RData
+            - ./Output/media_data.RData
+            - ./R/summary_tables.R
+        formula: >
+            cd R; Rscript summary_tables.R
+        output:
+            - ./Output/table_corpus_summary.md
+            - ./Output/table_ngo_list.md
+            - ./Output/table_topic_model.md
+...
