@@ -33,6 +33,7 @@ analyze data:
     load data into R: 
         help: load NGO articles into R (this can take a while...)
         dependencies: 
+            - ./Data/ngos.csv
             - ./R/load_data.R
         formula: >
             cd R; Rscript load_data.R
