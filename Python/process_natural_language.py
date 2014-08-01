@@ -1,5 +1,19 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+
+# Title:          process_natural_language.py
+# Description:    Stem words and create n-gram tokens
+# Author:         Andrew Heiss
+# Last updated:   2014-08-01
+# Python version: ≥2.7 (not 3 because of nltk)
+# Arguments:
+#   documents      the path to the folder of exported documents
+#   output_folder  the path to save final stemmed text files
+#   stopwords      a list of stopwords to remove
+#   bigram_csv     CSV of most common bigrams
+
+
+# Import modules
 import re
 import string
 import nltk
