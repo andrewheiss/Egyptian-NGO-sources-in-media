@@ -145,5 +145,7 @@ dne.articles <- dne.articles %>%
 #-----------------
 # Save for later
 #-----------------
-save(ngos, egind.articles, ahram.articles, dne.articles, all.mentions,
-     file="../Output/media_data.RData", compress="gzip")
+save(ngos, all.mentions,
+     file="../Output/mentions_data.RData", compress="gzip")
+save(ngos, egind.articles, ahram.articles, dne.articles,
+     file="../Output/full_text.RData", compress="gzip")

@@ -37,7 +37,8 @@ analyze data:
         formula: >
             cd R; Rscript load_data.R
         output: 
-            - ./Output/media_data.RData
+            - ./Output/mentions_data.RData
+            - ./Output/full_text.RData
     build topic model:
         help: create a topic model using the stemmed articles
         dependencies:
