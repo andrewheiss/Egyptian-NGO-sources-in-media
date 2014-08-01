@@ -59,7 +59,8 @@ dne.articles$day <- floor_date(dne.articles$actual_date, "day")
 #-----------------------------------
 # Create subsets that mention NGOs
 #-----------------------------------
-ngos <- c("The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hesham Mobarak Law Center", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Womens Legal Assistance", "Nazra for Feminist Studies")
+ngos <- data.frame(search.name=c("The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hisham Mubarak Law Center", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "Arab Organisation for Penal Reform", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Rights Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al-Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Women", "Nazra for Feminist Studies"), 
+                   clean.name=c("The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hisham Mubarak Law Center", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "Arab Organisation for Penal Reform", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al-Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Womens Legal Assistance", "Nazra for Feminist Studies"))
 
 
 # Need to pass the articles variable as a function so that parallel 
@@ -77,17 +78,20 @@ cl <- makeCluster(getOption('cl.cores', detectCores()))
 # 1 egind_193 FALSE                   FALSE 
 # 2 egind_240 FALSE                   FALSE 
 # 3 egind_241 FALSE                   FALSE
-egind.mentions.raw <- data.frame(parSapply(cl, X=ngos, FUN=find.mentions, 
+egind.mentions.raw <- data.frame(parSapply(cl, X=ngos$search.name, FUN=find.mentions, 
                                            egind.articles$article_content_no_punc))
 rownames(egind.mentions.raw) <- egind.articles$id_article
+colnames(egind.mentions.raw) <- ngos$clean.name
 
-ahram.mentions.raw <- data.frame(parSapply(cl, X=ngos, FUN=find.mentions, 
+ahram.mentions.raw <- data.frame(parSapply(cl, X=ngos$search.name, FUN=find.mentions, 
                                            ahram.articles$article_content_no_punc))
 rownames(ahram.mentions.raw) <- ahram.articles$id_article
+colnames(ahram.mentions.raw) <- ngos$clean.name
 
-dne.mentions.raw <- data.frame(parSapply(cl, X=ngos, FUN=find.mentions, 
+dne.mentions.raw <- data.frame(parSapply(cl, X=ngos$search.name, FUN=find.mentions, 
                                          dne.articles$article_content_no_punc))
 rownames(dne.mentions.raw) <- dne.articles$id_article
+colnames(dne.mentions.raw) <- ngos$clean.name
 
 # Close everything up
 stopCluster(cl)
@@ -105,7 +109,7 @@ rownames(egind.mentions) <- paste0("egypt_independent_", rownames(egind.mentions
 
 # Transpose so that organizations become rows
 egind.mentions <- data.frame(organization=colnames(egind.mentions),
-                             publication="egind", t(egind.mentions))
+                             publication="Egypt Independent", t(egind.mentions))
 
 
 # Repeat for the other two publications
@@ -113,13 +117,13 @@ ahram.mentions <- ahram.mentions.raw[apply(ahram.mentions.raw, MARGIN=1, functio
 ahram.mentions.ids <- rownames(ahram.mentions)
 rownames(ahram.mentions) <- paste0("ahram_", rownames(ahram.mentions))
 ahram.mentions <- data.frame(organization=colnames(ahram.mentions),
-                             publication="ahram", t(ahram.mentions))
+                             publication="Al-Ahram", t(ahram.mentions))
 
 dne.mentions <- dne.mentions.raw[apply(dne.mentions.raw, MARGIN=1, function(x) any(x==TRUE)), ]
 dne.mentions.ids <- rownames(dne.mentions)
 rownames(dne.mentions) <- paste0("dne_", rownames(dne.mentions))
 dne.mentions <- data.frame(organization=colnames(dne.mentions),
-                           publication="dne", t(dne.mentions))
+                           publication="Daily News Egypt", t(dne.mentions))
 
 
 # Combine everything into one data frame
