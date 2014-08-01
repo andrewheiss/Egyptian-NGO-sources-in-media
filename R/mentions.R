@@ -40,7 +40,6 @@ p + geom_bar(stat="identity", position="dodge") + coord_flip() +
   scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") 
 
 # TODO: Topics by organization by publication? Average topics for articles where NGO is mentioned
-# TODO: (1) Change NGO list in Python for article export
 # TODO: Top organizations for each topic?
 # TODO: How are organizations used? Press release vs. website vs. quoted person (who - kind of person, spokesperson, activist, etc.) vs. just a mention (+some sort of international tie?)
 # TODO: Pull sentences of mention ±1 sentence for context
