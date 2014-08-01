@@ -1,7 +1,7 @@
 # Title:          create_topic_model.R
 # Description:    Build topic model with MALLET
 # Author:         Andrew Heiss
-# Last updated:   2014-07-31
+# Last updated:   2014-08-01
 # R version:      ≥3.0
 
 # Load libraries and set initial working directory
@@ -27,59 +27,30 @@ if(!file.exists("../mallet/bin/mallet")) {
 #------------------------
 # Create MALLET command
 #------------------------
-if(control == FALSE) {
-  # Folder with input text files
-  # TODO: Make this work with spaces. shQuote(file.path(importdir)) should work, but the quoted path breaks MALLET
-  import.dir <- "articles_stemmed"
+# Folder with input text files
+# TODO: Make this work with spaces. shQuote(file.path(importdir)) should work, but the quoted path breaks MALLET
+import.dir <- "articles_stemmed"
 
-  # Set names for output files 
-  output.file <- "topics.mallet"  # MALLET data file
-  output.state <-  "topic-state.gz"  # List of every word in every article and which topics they're assigned to
-  output.topickeys <- "topic-keys.txt"  # List of the topics
-  output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
+# Set names for output files 
+output.file <- "topics.mallet"  # MALLET data file
+output.state <-  "topic-state.gz"  # List of every word in every article and which topics they're assigned to
+output.topickeys <- "topic-keys.txt"  # List of the topics
+output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
 
-  output.rdata <- "../Output/topic_model.RData"
-  output.csv <- "../Output/topic-docs.csv"
+output.rdata <- "../Output/topic_model.RData"
+output.csv <- "../Output/topic-docs.csv"
 
-  # SPSA short names
-  # short.names <- c("National government", "Draft constitution", "Environmental issues",
-  #                  "Development", "Police arrests", "Protests and clashes", 
-  #                  "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
-  #                  "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
-  #                  "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
-  #                  "SCAF", "Youth in the street", "Christian issues")
 
-  # Shortnames for enhanced corpus (stemmed, n-grammed)
-  short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
-                   "Sectarian issues", "Egyptian workers", "Religious issues", 
-                   "Police violence", "Business", "Protests and clashes", 
-                   "Muslim Brotherhood and constitution", "Elections", "Military trials", 
-                   "Legislation and governance", "Environmental issues", 
-                   "Human rights and civil society", "Protestors and activism", 
-                   "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
-                   "Post-revolutionary Egypt (catch-all)")
-} else {
-  # "Control" group of articles
-  import.dir <- "articles_control_stemmed"
-
-  # Set names for output files 
-  output.file <- "topics_control.mallet"
-  output.state <-  "topic_control-state.gz"
-  output.topickeys <- "topic_control-keys.txt"
-  output.doctopics <- "topic_control-doctopics.txt"
-
-  output.rdata <- "../Output/topic_model_control.RData"
-  output.csv <- "../Output/topic-docs_control.csv"
-
-  # Control group short names
-  short.names <- c("Muslim Brotherhood and politics", "Morsi and the media", 
-                   "Miscellaneous", "Unions and strikes", "Trials", "Egypt (catch-all)", 
-                   "Religious issues", "Syrian civil war", "Cairo affairs", 
-                   "Israel-Palestinian conflict", "Protests", "Foreign affairs", 
-                   "Christian affairs", "Football", "Culture", "Regional violence", 
-                   "Tourism", "Oil", "Social affairs", "Public economics")
-}
-
+# Short names for ISA
+# short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
+#                  "Sectarian issues", "Egyptian workers", "Religious issues", 
+#                  "Police violence", "Business", "Protests and clashes", 
+#                  "Muslim Brotherhood and constitution", "Elections", "Military trials", 
+#                  "Legislation and governance", "Environmental issues", 
+#                  "Human rights and civil society", "Protestors and activism", 
+#                  "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
+#                  "Post-revolutionary Egypt (catch-all)")
+short.names <- NA
 
 # Topic and optimization options
 num.topics <- 20  # Number of topics to model
