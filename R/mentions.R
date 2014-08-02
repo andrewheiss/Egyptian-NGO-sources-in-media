@@ -37,11 +37,29 @@ p + geom_bar(stat="identity", position="dodge") + coord_flip() +
   theme_bw(10) + 
   theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
         legend.key=element_blank()) + 
-  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") 
+  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="")
 
-# TODO: Topics by organization by publication? Average topics for articles where NGO is mentioned
-# TODO: Top organizations for each topic?
+# TODO: List of dataframes by organization and topics? Or just an indicator variable for the org?
+# Org1      Topic 1   Topic 2
+# article1  0.3       0.2
+# article2  0.21      0.5
+# article3  0.2       0.01
+#
+# Org2      Topic 1   Topic 2
+# article1  0.3       0.2
+# article3  0.21      0.5
+# article6  0.2       0.01
+
+# TODO: Count of NGO mentions in each topic
+#       Topic 1   Topic 2
+# Org1  5         2
+# Org2  3         4
+
+# Sources stuff
 # TODO: How are organizations used? Press release vs. website vs. quoted person (who - kind of person, spokesperson, activist, etc.) vs. just a mention (+some sort of international tie?)
 # TODO: Pull sentences of mention ±1 sentence for context
 # TODO: Figure out sentence topics?
 # TODO: Automate way of determining source usage? 
+
+# List of organizations by publication
+dcast(all.mentions, organization ~ publication, value.var="num.mentions")
