@@ -4,16 +4,11 @@
 # Last updated:   2014-08-01
 # R version:      ≥3.0
 
-# Load libraries and set initial working directory
+# Load libraries
 suppressPackageStartupMessages(library(reshape2))
 suppressPackageStartupMessages(library(scales))
 suppressPackageStartupMessages(library(plyr))
 suppressPackageStartupMessages(library(pander))
-
-# Process command line arguments
-source("get_args.R")  # Better handling of arguments
-args <- getArgs(defaults=list(control=FALSE))
-control = args$control
 
 # Set seed for MALLET
 mallet.seed <- 1234
