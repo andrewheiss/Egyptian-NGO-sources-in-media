@@ -14,6 +14,9 @@ suppressPackageStartupMessages(library(parallel))
 #--------------
 # Import data
 #--------------
+ngos <- read.csv("../Data/ngos.csv")
+article_ids <- read.csv("../Data/ngo_mention_ids.csv")
+
 # Connect to the databases
 drv <- dbDriver("SQLite")
 egind.con <- dbConnect(drv, "../Corpora/egypt_independent.db")
@@ -21,10 +24,19 @@ ahram.con <- dbConnect(drv, "../Corpora/ahram.db")
 dne.con <- dbConnect(drv, "../Corpora/dne.db")
 
 # Query the databases
-date.range <- "article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\'"
-egind.articles <- dbGetQuery(egind.con, paste("SELECT * FROM articles WHERE article_word_count < 10000 AND", date.range))  # Ignore new constitution
-ahram.articles <- dbGetQuery(ahram.con, paste("SELECT * FROM articles WHERE", date.range))
-dne.articles <- dbGetQuery(dne.con, paste("SELECT * FROM articles WHERE", date.range))
+egind_ids <- subset(article_ids, publication == "egypt_independent")$id_article
+ahram_ids <- subset(article_ids, publication == "ahram")$id_article
+dne_ids <- subset(article_ids, publication == "dne")$id_article
+
+egind.articles <- dbGetQuery(egind.con, 
+                             paste("SELECT * FROM articles WHERE id_article IN 
+                                   (", paste(egind_ids, collapse=", "), ")"))
+ahram.articles <- dbGetQuery(ahram.con, 
+                             paste("SELECT * FROM articles WHERE id_article IN 
+                                   (", paste(ahram_ids, collapse=", "), ")"))
+dne.articles <- dbGetQuery(dne.con, 
+                           paste("SELECT * FROM articles WHERE id_article IN 
+                                 (", paste(dne_ids, collapse=", "), ")"))
 
 
 #----------------
@@ -59,8 +71,6 @@ dne.articles$day <- floor_date(dne.articles$actual_date, "day")
 #-----------------------------------
 # Create subsets that mention NGOs
 #-----------------------------------
-ngos <- read.csv("../Data/ngos.csv")
-
 # Need to pass the articles variable as a function so that parallel 
 # can see it in the worker environment
 find.mentions <- function(x, articles) {
@@ -148,6 +158,6 @@ dne.articles <- dne.articles %>%
 # Save for later
 #-----------------
 save(ngos, all.mentions,
-     file="../Output/mentions_data.RData", compress="gzip")
+     file="../Data/mentions_data.RData", compress="gzip")
 save(ngos, egind.articles, ahram.articles, dne.articles,
-     file="../Output/full_text.RData", compress="gzip")
+     file="../Data/full_text.RData", compress="gzip")

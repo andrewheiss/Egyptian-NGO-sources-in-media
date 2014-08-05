@@ -32,8 +32,8 @@ output.state <-  "topic-state.gz"  # List of every word in every article and whi
 output.topickeys <- "topic-keys.txt"  # List of the topics
 output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
 
-output.rdata <- "../Output/topic_model.RData"
-output.csv <- "../Output/topic-docs.csv"
+output.rdata <- "../Data/topic_model.RData"
+output.csv <- "../Data/topic-docs.csv"
 
 
 # Short names for ISA
@@ -56,7 +56,7 @@ optimize.burnin <- 50  # Number of iterations to run before first estimating dir
 
 # Finally, paste the commands together
 # cd <- paste("cd", shQuote(normalizePath(base.directory)))
-cd <- paste("cd", shQuote(normalizePath("../Output")))
+cd <- paste("cd", shQuote(normalizePath("../Data")))
 import.command <- paste("../mallet/bin/mallet", "import-dir", "--input", import.dir, 
                         "--output", output.file, 
                         "--keep-sequence", 
@@ -81,8 +81,8 @@ system(mallet.command)
 # Parse the results
 #--------------------
 # Read the files created by MALLET
-topic.keys.result <- read.table(paste("../Output/", output.topickeys, sep=""), header=F, sep="\t")
-doc.topics.result <- read.table(paste("../Output/", output.doctopics, sep=""), header=F, sep="\t")
+topic.keys.result <- read.table(paste("../Data/", output.topickeys, sep=""), header=F, sep="\t")
+doc.topics.result <- read.table(paste("../Data/", output.doctopics, sep=""), header=F, sep="\t")
 
 # MAYBE: Make this *actually* look for (and remove?) the .DS_Store file?
 # if(nrow(doc.topics.result) != 515) {

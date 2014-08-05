@@ -42,4 +42,5 @@ p + geom_bar(stat="identity", position="dodge") + coord_flip() +
 
 
 # List of organizations by publication
+library(reshape2)
 dcast(all.mentions, organization ~ publication, value.var="num.mentions")

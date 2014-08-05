@@ -23,15 +23,15 @@ import pickle
 #---------------------------------
 # Load files and configure stuff
 #---------------------------------
-finished_file = '../Output/source_list_WILL_BE_OVERWRITTEN.xlsx'
+finished_file = 'Output/source_list_WILL_BE_OVERWRITTEN.xlsx'
 
 # Load lists of NGOs and article ids
-with open('../Data/ngos.csv', 'r') as f:
+with open('Data/ngos.csv', 'r') as f:
   ngo_list = csv.reader(f)
   next(ngo_list, None)  # Skip the header row (alternatively save to a variable)
   organizations = [org[0] for org in ngo_list]  # Read just the first column
 
-with open('../Output/ngo_mentions.obj', 'rb')  as p:
+with open('Data/ngo_mentions.obj', 'rb')  as p:
   db_ids = pickle.load(p)
 
 # Load NLTK sentence tokenizer
@@ -58,7 +58,7 @@ global_row += 1
 # Loop through all the corpora
 #-------------------------------
 for db in db_ids.keys():
-  database = '../Corpora/{0}.db'.format(db)
+  database = 'Corpora/{0}.db'.format(db)
   
   #------------------------------------
   # Connect to and query the database

@@ -7,7 +7,7 @@
 # Libraries
 library(pander)
 
-model.data <- "../Output/topic_model.RData"
+model.data <- "../Data/topic_model.RData"
 table.name <- "../Output/table_topic_model.md"
 
 
@@ -15,7 +15,7 @@ table.name <- "../Output/table_topic_model.md"
 # Output corpus-based tables
 #-----------------------------
 # Load corpus data
-load("../Output/media_data.RData")
+load("../Data/full_text.RData")
 
 #-------------------------
 # Generate summary table

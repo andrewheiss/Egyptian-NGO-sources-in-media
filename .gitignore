@@ -20,3 +20,5 @@ mallet/*
 
 # Publication stuff
 Output/*
+Data/*
+!Data/ngos.csv
