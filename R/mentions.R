@@ -10,7 +10,7 @@ suppressPackageStartupMessages(library(ggplot2))
 library(grid)
 
 # Load data
-load("../Output/mentions_data.RData")
+load("../Data/mentions_data.RData")
 
 # Find which organizations are cited the most
 orgs.mentioned <- all.mentions %>%
