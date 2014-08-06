@@ -49,28 +49,30 @@ org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
   select(-c(sentence_number, verbs, sentence_before, sentence, 
             sentence_after, url, name.lc, search.name, 
             id_article, clean.name, alternate)) %>%  # Remove extra columns
-  select(c(1, 22:28, 2:21))  # Reorder
-
-# MAYBE: Normalize per organization, not overall (or maybe not normalize?)
-
-blah <- melt(all.mentions[,-ncol(all.mentions)], id.vars=c("organization", "publication"), na.rm=TRUE)
-
-blah1 <- blah %>%
-  group_by(organization) %>%
-  filter(value == TRUE)
+  select(c(1, 22:28, 2:21))  # Reorder columns
 
 
+# summarise_each wipes out existing columns, so get the counts first
+# TODO: Subset by used_as_source once that data's done
+ngo.counts <- org.source.topics %>% 
+  group_by(organization, publication) %>% summarise(count=n()) %>% arrange(desc(count))
 
-# Calculate summaries of normalized proportions
-topic.means.wide <- topic.docs %>%
-  group_by(publication) %>%
-  summarise_each(funs(mean))  # Or funs(mean, sd) to get both
+org.topics <- org.source.topics %>%
+  group_by(organization, publication) %>%
+  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  left_join(ngo.counts, by=c("organization", "publication")) %>%
+  arrange(desc(count))
 
-topic.means.long <- melt(topic.means.wide, id="publication", variable.name="topic", value.name="proportion")
-# topic.means.long$label <- factor(topic.means.long$topic, labels=topic.keys.result$short.names)
+org.topics.long <- melt(org.topics, id.vars=c("organization", "publication"), 
+                        variable.name="topic") %>%
+  filter(topic != "count")
 
-# Get reverse topic order for correct plotting
-# topic.order <- topic.keys.result[order(topic.keys.result$dirichlet, decreasing=FALSE), "short.names"]
-# topic.means.long$label <- factor(topic.means.long$label, levels=topic.order, ordered=TRUE)
-
-
+# BUG: The rows with 0 counts are missing, leading to goofy bar widths
+p <- ggplot(data=org.topics.long, aes(x=organization, y=value, fill=publication))
+p + geom_bar(stat="identity", position="dodge") + 
+  labs(x=NULL, y="Average proportion") + 
+  theme_bw(10) + 
+  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
+        legend.key=element_blank()) + 
+  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  coord_flip() + facet_wrap(~ topic)
