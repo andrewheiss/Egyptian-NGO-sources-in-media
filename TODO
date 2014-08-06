@@ -9,16 +9,10 @@ article1  0.3       0.2
 article3  0.21      0.5
 article6  0.2       0.01
 
-TODO: Predominant topics in the paragraph where the mention occurs
-Org   Article    Topic 1    Topic 2
-org1  article1   0.3        0.4
-org2  article1   0.2        0.1
 
-
-Sources stuff
 TODO: How are organizations used? Press release vs. website vs. quoted person (who - kind of person, spokesperson, activist, etc.) vs. just a mention (+some sort of international tie?)
-TODO: Figure out sentence topics?
-TODO: Automate way of determining source usage? 
+TODO: Topics in articles where NGO is used as a source vs. just a mention; publications that use them as sources more - source:mention ratio - types of sourcing per publication - topics
+LATER: Automate way of determining source usage? 
 
 MAYBE: Use NLTK 3.0 in process_natural_language.py
 MAYBE: Use NLTK instead of TextBlob in extract_pos.py
