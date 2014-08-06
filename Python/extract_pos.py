@@ -46,7 +46,7 @@ org_regex = re.compile("(" + "|".join([org.lower() for org in organizations]) + 
 #------------------------
 # Excel can't handle Unicode in CSV files, so write all the data to an Excel file instead
 global_row = 0  # xlsxwriter doesn't have a writerow(function), so we have to keep track of what row we're on
-columns = ['id_article', 'publication', 'sentence_number', 'organization', 'verbs', 'sentence_before', 'sentence', 'sentence_after', 'title', 'url', 'source', 'source_type']
+columns = ['id_article', 'publication', 'sentence_number', 'organization', 'verbs', 'sentence_before', 'sentence', 'sentence_after', 'title', 'url', 'used_as_source', 'source_type']
 workbook = xlsxwriter.Workbook(finished_file)  # Create new spreadsheet
 worksheet = workbook.add_worksheet()  # Make new worksheet
 for col in range(0, len(columns)):  # Write the header row
