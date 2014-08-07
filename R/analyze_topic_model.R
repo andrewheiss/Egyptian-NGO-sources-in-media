@@ -11,6 +11,7 @@ library(ggplot2)
 library(scales)
 library(grid)
 library(XLConnect)
+library(pander)
 
 # Load topic and mentions data
 load("../Data/topic_model.RData")
@@ -76,3 +77,19 @@ p + geom_bar(stat="identity", position="dodge") +
         legend.key=element_blank()) + 
   scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
   coord_flip() + facet_wrap(~ topic)
+
+
+# Export table of counts by publication
+mention.summary <- dcast(ngo.counts, organization ~ publication, value.var="count") %>%
+  group_by(organization) %>%
+  summarise_each(funs(sum(., na.rm=TRUE)))
+
+# MAYBE: Would be nice to put this in the main dplyr chain
+# Oooh dplyr chain nested in the mutate() call...
+mention.summary %>% mutate(Total = mention.summary %.% select(2:4) %.% rowSums()) %>%
+  arrange(desc(Total))
+
+# Export to Markdown
+cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3,
+                        justify="left", caption="Number of organization mentions in each publication"),
+    file="../Output/mention_summary.md")
