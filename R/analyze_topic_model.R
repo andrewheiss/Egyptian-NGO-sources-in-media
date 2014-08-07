@@ -86,7 +86,8 @@ mention.summary <- dcast(ngo.counts, organization ~ publication, value.var="coun
 
 # MAYBE: Would be nice to put this in the main dplyr chain
 # Oooh dplyr chain nested in the mutate() call...
-mention.summary %>% mutate(Total = mention.summary %.% select(2:4) %.% rowSums()) %>%
+mention.summary <- mention.summary %>% 
+  mutate(Total = mention.summary %.% select(2:4) %.% rowSums()) %>%
   arrange(desc(Total))
 
 # Export to Markdown
