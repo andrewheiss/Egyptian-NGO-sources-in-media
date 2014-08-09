@@ -53,6 +53,15 @@ org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
   select(c(1, 22:28, 2:21))  # Reorder columns
 
 
+# # Find articles where one organization is mentioned twice. 
+# # Manually create ignore_duplicate variable in the Excel file
+# # Direct quote > Paraphrase > Passing reference > Report/Statement > None
+# multiple.mentions.ids <- org.source.topics %>%
+#   group_by(organization, article_id) %>%
+#   filter(row_number() > 1)
+# multiple.mentions.ids$article_id
+
+
 # summarise_each wipes out existing columns, so get the counts first
 # TODO: Subset by used_as_source once that data's done
 ngo.counts <- org.source.topics %>% 
