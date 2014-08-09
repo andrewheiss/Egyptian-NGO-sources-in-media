@@ -12,6 +12,7 @@ library(scales)
 library(grid)
 library(XLConnect)
 library(pander)
+library(xtable)
 
 # Load topic and mentions data
 load("../Data/topic_model.RData")
@@ -22,6 +23,7 @@ load("../Data/mentions_data.RData")
 org.sources.wb <- loadWorkbook("../Data/source_list.xlsx")
 setMissingValue(org.sources.wb, ".")
 org.sources.full <- readWorksheet(org.sources.wb, sheet="Sheet1")
+
 
 # Add primary keys
 topic.docs <- topic.docs %>%
@@ -40,15 +42,16 @@ org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
                               labels=c("Al-Ahram English", "Daily News Egypt", 
                                        "Egypt Independent"), 
                               ordered=TRUE)) %>%  # Make a bunch of factors
+  filter(ignore_duplicate == "No", byline == "No") %>%
   mutate(used_as_source = factor(used_as_source)) %>%
-  mutate(author = factor(author)) %>%
   mutate(source_type = factor(source_type)) %>%
   mutate(source_who = factor(source_who)) %>%
-  mutate(name.lc = organization) %>%  # Make primary key
+  mutate(individual = factor(individual)) %>%
+  mutate(name.lc = organization) %>%  # Make key
   left_join(ngos, by="name.lc") %>%  # Bring in nice NGO names
   mutate(organization = clean.name) %>%  # Rename organization variable
-  select(-c(sentence_number, verbs, sentence_before, sentence, 
-            sentence_after, url, name.lc, search.name, 
+  select(-c(sentence_number, verbs, sentence_before, sentence, byline,
+            sentence_after, url, name.lc, search.name, ignore_duplicate, 
             id_article, clean.name, alternate)) %>%  # Remove extra columns
   select(c(1, 22:28, 2:21))  # Reorder columns
 
@@ -103,3 +106,12 @@ mention.summary <- mention.summary %>%
 cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3,
                         justify="left", caption="Number of organization mentions in each publication"),
     file="../Output/mention_summary.md")
+
+# Crosstabs!
+# TODO: Combine indirect + paraphrase; report + statement
+just.sources <- org.source.topics %>% filter(used_as_source == "Yes")
+levels(just.sources$source_type) <- c("Direct quote", "Paraphrase", "Paraphrase", "Statement", "Statement")
+
+source.type.pub <- xtabs(~ publication + source_type, data=just.sources)
+round(prop.table(source.type.pub, 1), 2)
+chisq.test(source.type.pub)
