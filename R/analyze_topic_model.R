@@ -12,7 +12,7 @@ library(scales)
 library(grid)
 library(XLConnect)
 library(pander)
-library(xtable)
+library(vcd)
 
 # Load topic and mentions data
 load("../Data/topic_model.RData")
@@ -107,11 +107,37 @@ cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3,
                         justify="left", caption="Number of organization mentions in each publication"),
     file="../Output/mention_summary.md")
 
-# Crosstabs!
-# TODO: Combine indirect + paraphrase; report + statement
-just.sources <- org.source.topics %>% filter(used_as_source == "Yes")
-levels(just.sources$source_type) <- c("Direct quote", "Paraphrase", "Paraphrase", "Statement", "Statement")
 
+# Crosstabs!
+# Only look at articles where NGOs are used as sources
+just.sources <- org.source.topics %>% filter(used_as_source == "Yes")
+
+# Collapse levels
+levels(just.sources$source_type) <- c("Direct quote", "Paraphrase", 
+                                      "Paraphrase", "Statement", "Statement")
+
+# Build contingency table
 source.type.pub <- xtabs(~ publication + source_type, data=just.sources)
-round(prop.table(source.type.pub, 1), 2)
+
+# Statistical tests for contingency tables
 chisq.test(source.type.pub)
+coindep_test(source.type.pub, n=5000)
+
+# Build mosaic plots
+mosaic(source.type.pub, pop=FALSE, 
+       labeling_args=list(set_varnames=c(source_type="Type of source", 
+                                         publication="Publication")), 
+       gp=gpar(fill=matrix(c("#e41a1c", "#377eb8", "#e6ab02"), 3, 3)))
+labeling_cells(text=source.type.pub)(source.type.pub)  # Add counts
+
+assoc(source.type.pub, labeling_args=list(set_varnames=c(
+  source_type="Type of source", publication="Publication")))
+
+
+# Output nice proportion table
+nice.table <- as.data.frame(addmargins(prop.table(source.type.pub, 2), 1)) %.%
+  mutate(Freq = paste(round(Freq*100, 2), "%", sep=""))
+nice.table <- dcast(nice.table, publication ~ source_type, value.var="Freq")
+cat(pandoc.table.return(nice.table, justify="left", 
+                        caption="Percent of source type per publication"),
+    file="../Output/source_publication_table.md")
