@@ -22,3 +22,4 @@ mallet/*
 Output/*
 Data/*
 !Data/ngos.csv
+.Rproj.user
