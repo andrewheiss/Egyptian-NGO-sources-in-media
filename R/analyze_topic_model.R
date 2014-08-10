@@ -110,11 +110,14 @@ cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3,
 
 # Crosstabs!
 # Only look at articles where NGOs are used as sources
-just.sources <- org.source.topics %>% filter(used_as_source == "Yes")
+just.sources <- org.source.topics %>% 
+  mutate(source_type = factor(ifelse(used_as_source == "No", 
+                              "No", as.character(source_type))))
 
 # Collapse levels
-levels(just.sources$source_type) <- c("Direct quote", "Paraphrase", 
+levels(just.sources$source_type) <- c("Direct quote", "Paraphrase", "No source",
                                       "Paraphrase", "Statement", "Statement")
+just.sources$source_type <- factor(just.sources$source_type, levels=c("Direct quote", "Paraphrase", "Statement", "No source"))
 
 # Build contingency table
 source.type.pub <- xtabs(~ publication + source_type, data=just.sources)
@@ -123,16 +126,27 @@ source.type.pub <- xtabs(~ publication + source_type, data=just.sources)
 chisq.test(source.type.pub)
 coindep_test(source.type.pub, n=5000)
 
+
 # Build mosaic plots
-mosaic(source.type.pub, pop=FALSE, 
+cell.colors <- cbind(matrix(c("#e41a1c", "#377eb8", "#e6ab02"), 3, 3),
+                     c("#7c1116", "#193a51", "#7f5c03"))
+
+pdf("../Output/mosaic.pdf", width=4, height=4)
+mosaic(source.type.pub, pop=FALSE,
        labeling_args=list(set_varnames=c(source_type="Type of source", 
-                                         publication="Publication")), 
-       gp=gpar(fill=matrix(c("#e41a1c", "#377eb8", "#e6ab02"), 3, 3)))
-labeling_cells(text=source.type.pub)(source.type.pub)  # Add counts
+                                         publication="Publication"),
+                          gp_labels=(gpar(fontsize=7))), 
+       gp=gpar(fill=cell.colors), gp_varnames=gpar(fontsize=9, fontface=2))
+
+# Add counts
+labeling_cells(text=source.type.pub, gp_text=gpar(fontsize=8))(source.type.pub)
+dev.off()
 
 assoc(source.type.pub, labeling_args=list(set_varnames=c(
   source_type="Type of source", publication="Publication")))
 
+# # Add individuals, just for fun
+# mosaic(xtabs(~ publication + source_type + individual, data=just.sources))
 
 # Output nice proportion table
 nice.table <- as.data.frame(addmargins(prop.table(source.type.pub, 2), 1)) %.%
