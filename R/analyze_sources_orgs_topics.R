@@ -130,6 +130,18 @@ top.organizations <- factor(c("The Egyptian Initiative for Personal Rights",
                               "The Hisham Mubarak Law Center"), ordered=TRUE)
 
 
+# Find organizations with more than 5 sourced mentions of any type
+top.orgs.raw <- as.data.frame(xtabs(~ organization + source_type, 
+                                    data=org.source.topics)) %>%
+  group_by(organization) %>%
+  filter(Freq > 5) %>%
+  arrange(desc(Freq))
+
+# Save to single ordered factor
+top.orgs <- unique(factor(top.orgs.raw$organization, 
+                          levels=unique(top.orgs.raw$organization), ordered=TRUE))
+
+
 #---------------------
 # Plotting variables
 #---------------------
