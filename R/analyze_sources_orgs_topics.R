@@ -4,6 +4,8 @@
 # Last updated:   2014-08-11
 # R version:      ≥3.0
 
+# TODO: Space after horizontal legend labels
+
 #--------------------------
 # Load libraries and data
 #--------------------------
@@ -16,6 +18,11 @@ library(grid)
 library(XLConnect)
 library(pander)
 library(vcd)
+library(extrafont)
+
+# Load fonts
+# font_import()  # Doesn't work with otf fonts
+# loadfonts()
 
 # Load topic and mentions data
 load("../Data/topic_model.RData")
@@ -123,6 +130,30 @@ top.organizations <- factor(c("The Egyptian Initiative for Personal Rights",
                               "The Hisham Mubarak Law Center"), ordered=TRUE)
 
 
+#---------------------
+# Plotting variables
+#---------------------
+publication.colors <- c("#e41a1c", "#377eb8", "#e6ab02")
+
+theme_ath <- function(base_size=12) {
+  ret <- theme_bw(base_size) + 
+    theme(axis.title=element_text(vjust=0.2), legend.position="bottom",
+          text=element_text(family="Clear Sans"))
+  ret
+}
+
+theme_dotplot <- theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
+                       axis.ticks.y=element_blank(), legend.key=element_blank(), 
+                       legend.direction="horizontal", 
+                       legend.box="horizontal", legend.key.size=unit(.7, "line"),
+                       legend.text=element_text(size=4), 
+                       legend.title=element_text(size=4),
+                       plot.margin=unit(c(0,0,0,0), "line"))
+
+theme_bar <- theme(panel.grid.major.x=element_blank(), axis.ticks.y=element_blank(),
+                   legend.key.size=unit(.7, "line"))
+
+
 #----------------------------------------
 # Analyze sourced vs. mentioned sources
 #----------------------------------------
@@ -184,7 +215,7 @@ coindep_test(source.type.pub, n=5000)
 
 
 # Build mosaic plot
-cell.colors <- cbind(matrix(c("#e41a1c", "#377eb8", "#e6ab02"), 3, 3),
+cell.colors <- cbind(matrix(publication.colors, 3, 3),
                      c("#7c1116", "#193a51", "#7f5c03"))
 
 pdf("../Output/mosaic.pdf", width=4, height=4)
@@ -250,10 +281,10 @@ plot.data <- as.data.frame(org.source.pub.tab)
 p <- ggplot(plot.data, aes(x=organization, y=Freq, fill=publication))
 p + geom_bar(stat="identity", position="dodge") + coord_flip() + 
   labs(x=NULL, y="Articles where used as source") + 
-  theme_bw(10) + 
+  theme_ath(10) + 
   theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
         legend.key=element_blank()) + 
-  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_fill_manual(values=publication.colors, name="") + 
   facet_wrap(~ source_type)
 
 
@@ -276,10 +307,10 @@ org.topics.long <- melt(org.topics, id.vars=c("organization", "publication"),
 p <- ggplot(data=org.topics.long, aes(x=organization, y=value, fill=publication))
 p + geom_bar(stat="identity", position="dodge") + 
   labs(x=NULL, y="Average proportion") + 
-  theme_bw(10) + 
+  theme_ath(10) + 
   theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
         legend.key=element_blank()) + 
-  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_fill_manual(values=publication.colors, name="") + 
   coord_flip() + facet_wrap(~ topic)
 
 
@@ -344,20 +375,16 @@ plot.pub.topics <- org.source.topics %>%
 p <- ggplot(plot.pub.topics, aes(x=label.rev, y=proportion, colour=publication))
 plot.topic.pub <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
                                  position=position_jitter(width=0, height=.002)) +
-  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
-  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
-        axis.ticks.y=element_blank(), legend.key = element_blank(), 
-        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
-        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
-        legend.text=element_text(size=4), legend.title=element_text(size=4),
-        plot.margin=unit(c(0,0,0,0), "line")) +
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  theme_ath(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) + 
-  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_colour_manual(values=publication.colors, name="") + 
   scale_size_continuous(range = c(2, 7), 
                         name=expression(paste("Proportion (", alpha, ")")))
 
 ggsave(plot.topic.pub, filename="../Output/plot_topic_pub.pdf", 
        width=5.5, height=4, units="in")
+embed_fonts("../Output/plot_topic_pub.pdf")
 
 
 #-------------------------------------------------
@@ -389,21 +416,17 @@ plot.data <- melt(comb.org.pub.topics, measure.vars=4:23,
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=publication))
 plot.topic.pub.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
                position=position_jitter(width=0, height=.002)) +
-  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
-  coord_flip() + facet_wrap(~ organization) + 
-  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
-        axis.ticks.y=element_blank(), legend.key = element_blank(), 
-        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
-        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
-        legend.text=element_text(size=4), legend.title=element_text(size=4),
-        plot.margin=unit(c(0,0,0,0), "line")) + 
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  theme_ath(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) + 
-  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_colour_manual(values=publication.colors, name="") + 
   scale_size_continuous(range = c(2, 7), 
-                        name=expression(paste("Proportion (", alpha, ")")))
+                        name=expression(paste("Proportion (", alpha, ")"))) + 
+  facet_wrap(~ organization)
 
 ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.pdf", 
        width=8, height=6, units="in")
+embed_fonts("../Output/plot_topic_pub_org.pdf")
 
 
 #----------------------------------------
@@ -435,18 +458,15 @@ plot.data <- melt(comb.org.source.topics, measure.vars=4:23,
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=source_type))
 plot.topic.source.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
                                      position=position_jitter(width=0, height=.002)) +
-  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
-  coord_flip() + facet_wrap(~ organization) + 
-  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
-        axis.ticks.y=element_blank(), legend.key = element_blank(), 
-        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
-        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
-        legend.text=element_text(size=4), legend.title=element_text(size=4),
-        plot.margin=unit(c(0,0,0,0), "line")) + 
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  theme_ath(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) + 
-  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_colour_manual(values=publication.colors, name="") + 
   scale_size_continuous(range = c(2, 7), 
-                        name=expression(paste("Proportion (", alpha, ")")))
+                        name=expression(paste("Proportion (", alpha, ")"))) + 
+  facet_wrap(~ organization)
 
 ggsave(plot.topic.source.org, filename="../Output/plot_topic_source_org.pdf", 
        width=8, height=6, units="in")
+embed_fonts("../Output/plot_topic_source_org.pdf")
+
