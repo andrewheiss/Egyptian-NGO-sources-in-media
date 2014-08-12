@@ -470,3 +470,22 @@ ggsave(plot.topic.source.org, filename="../Output/plot_topic_source_org.pdf",
        width=8, height=6, units="in")
 embed_fonts("../Output/plot_topic_source_org.pdf")
 
+
+#------------------------
+# Source by publication
+#------------------------
+plot.data <- melt.base %>%
+  group_by(publication, source_type) %>%
+  summarise(count = n())
+
+p <- ggplot(na.omit(plot.data), aes(x=source_type, fill=publication))
+plot.source.pub <- p + geom_bar(aes(y=(count)/sum(count)), 
+                                stat="identity", position="dodge") + 
+  labs(x="\nType of source", y="Proportion\n") + 
+  theme_ath(8) + theme_bar + 
+  scale_y_continuous(labels = percent) + 
+  scale_fill_manual(values=publication.colors, name="")
+
+ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf", 
+       width=5.5, height=4, units="in")
+embed_fonts("../Output/plot_source_pub.pdf")
