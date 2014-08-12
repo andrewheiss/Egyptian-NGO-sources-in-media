@@ -31,6 +31,7 @@ org.sources.full <- readWorksheet(org.sources.wb, sheet="Sheet1")
 #-------------------------
 # Initial data wrangling
 #-------------------------
+# TODO: Bring in topic short names and dirichlet params
 # Add primary keys to topics
 topic.docs <- topic.docs %>%
   mutate(article_id = gsub("\\.txt", "", rownames(topic.docs)))
@@ -41,6 +42,19 @@ org.sources <- org.sources.full %>%
 
 # Add lower case column since the names are lc in org.sources
 ngos <- ngos %>% mutate(name.lc = tolower(search.name))
+
+# Deal with topic labels and dirichlet params
+short.names.actual <- c("Post-revolutionary Egypt (catch-all)", "Legislation and governance", "Muslim Brotherhood and constitution", "Military trials", "Protestors and activism?", "Public economics", "Religious issues", "Police arrests", "Environmental issues", "Human rights and civil society", "Sexual violence", "Protests and clashes", "Egyptian workers", "Elections", "Trials", "Sectarian issues", "Media and censorship", "Morsi", "Police torture", "Regime politics")
+
+topics <- topic.keys.result %>%
+  mutate(topic = factor(paste0("X", key))) %>%
+  mutate(label = short.names.actual) %>%
+  mutate(topic.words = as.character(topic.words)) %>%
+  arrange(desc(dirichlet)) %>%
+  mutate(label = factor(label, levels=label, ordered=TRUE)) %>%
+  mutate(label.rev = factor(label, levels=rev(label), ordered=TRUE)) %>%
+  select(-short.names)
+
 
 # Make mega data frame of organizations + sources + topics, listed by organization rows
 org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
@@ -68,6 +82,7 @@ org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
 ngo.counts <- org.source.topics %>% 
   group_by(organization, publication) %>% summarise(count=n()) %>% arrange(desc(count))
 
+
 # # Find articles where one organization is mentioned twice. 
 # # Manually create ignore_duplicate variable in the Excel file
 # # Direct quote > Paraphrase > Passing reference > Report/Statement > None
@@ -75,6 +90,37 @@ ngo.counts <- org.source.topics %>%
 #   group_by(organization, article_id) %>%
 #   filter(row_number() > 1)
 # multiple.mentions.ids$article_id
+
+
+# Create a data frame with collapsed source levels. 
+# Use this for all calls to xtabs() to maintain empty categories before melting
+# Necessary because dplyr drops empty combinations when using summarize(), 
+#   which leaves missing plot pieces in ggplot
+melt.base <- org.source.topics
+levels(melt.base$source_type) <- c("Direct quote", "Paraphrase", 
+                                   "Paraphrase", "Statement", "Statement")
+
+# Example of how to subset with xtabs + dplyr, pre-melt
+# All combinations
+all.combinations <- melt.base %>%
+  xtabs(formula = ~ organization + publication + source_type) %>% 
+  as.data.frame()
+
+# Get the average of each topic for each org + source + publication
+topics.avg <- melt.base %>%
+  group_by(organization, source_type, publication) %>%
+  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+
+# Merge average topics into the df of all combinations, set missing to 0
+all.combinations.topics <- all.combinations %>%
+  left_join(topics.avg, by=c("organization", "source_type", "publication"))
+
+
+# Choose top organizations for plotting subset of organizations
+top.organizations <- factor(c("The Egyptian Initiative for Personal Rights", 
+                              "Arab Network for Human Rights Information", 
+                              "The Egyptian Organization for Human Rights",
+                              "The Hisham Mubarak Law Center"), ordered=TRUE)
 
 
 #----------------------------------------
@@ -244,3 +290,163 @@ p + geom_bar(stat="identity", position="dodge") +
 # TODO: Topics + organization
 # TODO: Topics with more NGO sources by type
 # TODO: Which topics use direct quotes more
+# TODO: Topics by organization (EIPR covered across different topics)
+org.source.topics.summary <- org.source.topics %>%
+  group_by(organization, publication) %>%
+  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  left_join(ngo.counts, by=c("organization", "publication")) %>%
+  arrange(desc(count))
+org.source.topics.summary
+
+
+# Filter full data to only include top sourced articles
+more.than.five <- source.orgs %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
+
+asdf <- org.source.topics %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
+
+qwer <- asdf %>%
+  group_by(organization, publication, source_type) %>%
+  summarise_each_q(funs(mean), 9:28)
+
+levels(qwer$source_type) <- c("Direct quote", "Paraphrase", 
+                              "Paraphrase", "Statement", "Statement")
+
+qwer.long <- melt(qwer, id.vars=c("organization", "publication", "source_type"), 
+                        variable.name="topic") %>%
+  filter(topic == "X0")
+
+p <- ggplot(data=na.omit(qwer.long), aes(x=organization, y=value, fill=source_type))
+p + geom_bar(stat="identity", position="dodge") + 
+  coord_flip() + facet_wrap(~ topic)
+
+
+
+
+# TODO: THIS FIRST - start simple - topics in each organization. Then topics + organization + source type; topics + organization + publication; topics + source_type; topics + publication
+
+
+
+#--------------------------------------
+# Plot average topics per publication
+#--------------------------------------
+plot.pub.topics <- org.source.topics %>%
+  group_by(publication) %>%
+  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  select(-X0) %>%
+  melt(measure.vars=2:20, id.vars=c("publication"), 
+       variable.name="topic", value.name="proportion") %>%
+  left_join(topics, by="topic")
+  
+p <- ggplot(plot.pub.topics, aes(x=label.rev, y=proportion, colour=publication))
+plot.topic.pub <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
+                                 position=position_jitter(width=0, height=.002)) +
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
+  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
+        axis.ticks.y=element_blank(), legend.key = element_blank(), 
+        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
+        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
+        legend.text=element_text(size=4), legend.title=element_text(size=4),
+        plot.margin=unit(c(0,0,0,0), "line")) +
+  coord_flip() + scale_y_continuous(labels=percent) + 
+  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_size_continuous(range = c(2, 7), 
+                        name=expression(paste("Proportion (", alpha, ")")))
+
+ggsave(plot.topic.pub, filename="../Output/plot_topic_pub.pdf", 
+       width=5.5, height=4, units="in")
+
+
+#-------------------------------------------------
+# Plot topics by each organization (or top ones)
+#-------------------------------------------------
+# Create org + publication data frame
+comb.org.pub <- melt.base %>%
+  xtabs(formula = ~ organization + publication) %>% 
+  as.data.frame()
+
+# Get the average of each topic for each org + source + publication
+topics.avg <- melt.base %>%
+  group_by(organization, publication) %>%
+  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+
+# Merge average topics into the df of all combinations, set missing to 0
+comb.org.pub.topics <- comb.org.pub %>%
+  left_join(topics.avg, by=c("organization", "publication"))
+
+plot.data <- melt(comb.org.pub.topics, measure.vars=4:23, 
+                  id.vars=c("organization", "publication"), 
+                  variable.name="topic", value.name="proportion") %>%
+  filter(organization %in% organizations) %>%
+  filter(topic != "X0") %>%
+  mutate(organization = factor(organization, levels=top.organizations)) %>%
+  mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
+  left_join(topics, by="topic")
+
+p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=publication))
+plot.topic.pub.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
+               position=position_jitter(width=0, height=.002)) +
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
+  coord_flip() + facet_wrap(~ organization) + 
+  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
+        axis.ticks.y=element_blank(), legend.key = element_blank(), 
+        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
+        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
+        legend.text=element_text(size=4), legend.title=element_text(size=4),
+        plot.margin=unit(c(0,0,0,0), "line")) + 
+  coord_flip() + scale_y_continuous(labels=percent) + 
+  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_size_continuous(range = c(2, 7), 
+                        name=expression(paste("Proportion (", alpha, ")")))
+
+ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.pdf", 
+       width=8, height=6, units="in")
+
+
+#----------------------------------------
+# Plot topics + sources + organizations
+#----------------------------------------
+# Create org + source data frame
+comb.org.source <- melt.base %>%
+  xtabs(formula = ~ organization + source_type) %>% 
+  as.data.frame()
+
+# Get the average of each topic for each org + source + publication
+topics.avg <- melt.base %>%
+  group_by(organization, source_type) %>%
+  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+
+# Merge average topics into the df of all combinations, set missing to 0
+comb.org.source.topics <- comb.org.source %>%
+  left_join(topics.avg, by=c("organization", "source_type"))
+
+plot.data <- melt(comb.org.source.topics, measure.vars=4:23, 
+                  id.vars=c("organization", "source_type"), 
+                  variable.name="topic", value.name="proportion") %>%
+  filter(organization %in% organizations) %>%
+  filter(topic != "X0") %>%
+  mutate(organization = factor(organization, levels=top.organizations)) %>%
+  mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
+  left_join(topics, by="topic")
+
+p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=source_type))
+plot.topic.source.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
+                                     position=position_jitter(width=0, height=.002)) +
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + theme_bw(8) + 
+  coord_flip() + facet_wrap(~ organization) + 
+  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
+        axis.ticks.y=element_blank(), legend.key = element_blank(), 
+        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
+        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
+        legend.text=element_text(size=4), legend.title=element_text(size=4),
+        plot.margin=unit(c(0,0,0,0), "line")) + 
+  coord_flip() + scale_y_continuous(labels=percent) + 
+  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_size_continuous(range = c(2, 7), 
+                        name=expression(paste("Proportion (", alpha, ")")))
+
+ggsave(plot.topic.source.org, filename="../Output/plot_topic_source_org.pdf", 
+       width=8, height=6, units="in")
