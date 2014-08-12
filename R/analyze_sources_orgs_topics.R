@@ -245,76 +245,6 @@ cat(pandoc.table.return(nice.table, justify="left",
 
 
 #----------------------------------------------------
-# Analyze organizations + source type + publication
-#----------------------------------------------------
-# Copy data frame for more wrangling
-source.orgs <- org.source.topics
-
-# Collapse levels
-levels(source.orgs$source_type) <- c("Direct quote", "Paraphrase", 
-                                     "Paraphrase", "Statement", "Statement")
-
-# Find organizations with more than 5 sourced mentions of any type
-top.orgs.raw <- as.data.frame(xtabs(~ organization + source_type, 
-                                    data=source.orgs)) %>%
-  group_by(organization) %>%
-  filter(Freq > 5) %>%
-  arrange(desc(Freq))
-
-# Save to single ordered factor
-top.orgs <- unique(factor(top.orgs.raw$organization, 
-                          levels=unique(top.orgs.raw$organization), ordered=TRUE))
-
-# Filter full data to only include top sourced articles
-more.than.five <- source.orgs %>%
-  filter(organization %in% top.orgs) %>%
-  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
-
-# Crosstab and convert to dataframe for plotting
-org.source.pub.tab <- xtabs(~ organization + publication + source_type, 
-                            data=more.than.five)
-org.source.pub.tab.prop <- prop.table(org.source.pub.tab, c(1,3))
-chisq.test(org.source.pub.tab)
-
-# Pretty pictures
-plot.data <- as.data.frame(org.source.pub.tab)
-p <- ggplot(plot.data, aes(x=organization, y=Freq, fill=publication))
-p + geom_bar(stat="identity", position="dodge") + coord_flip() + 
-  labs(x=NULL, y="Articles where used as source") + 
-  theme_ath(10) + 
-  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
-        legend.key=element_blank()) + 
-  scale_fill_manual(values=publication.colors, name="") + 
-  facet_wrap(~ source_type)
-
-
-#-------------------------------------------------------
-# Analyze average topics by organization + publication
-#-------------------------------------------------------
-# Find average topics for each organization in each publication
-org.topics <- org.source.topics %>%
-  group_by(organization, publication) %>%
-  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
-  left_join(ngo.counts, by=c("organization", "publication")) %>%
-  arrange(desc(count))
-
-# Reshape for plotting
-org.topics.long <- melt(org.topics, id.vars=c("organization", "publication"), 
-                        variable.name="topic") %>%
-  filter(topic != "count")
-
-# BUG: The rows with 0 counts are missing, leading to goofy bar widths
-p <- ggplot(data=org.topics.long, aes(x=organization, y=value, fill=publication))
-p + geom_bar(stat="identity", position="dodge") + 
-  labs(x=NULL, y="Average proportion") + 
-  theme_ath(10) + 
-  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
-        legend.key=element_blank()) + 
-  scale_fill_manual(values=publication.colors, name="") + 
-  coord_flip() + facet_wrap(~ topic)
-
-
-#----------------------------------------------------
 #--------------------------------------------------
 # Analyze all the things
 # topics + organizations + sources + publication 
@@ -360,14 +290,14 @@ topics.avg <- melt.base %>%
   group_by(organization, publication) %>%
   summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
-# Merge average topics into the df of all combinations, set missing to 0
+# Merge average topics into the df org + publication
 comb.org.pub.topics <- comb.org.pub %>%
   left_join(topics.avg, by=c("organization", "publication"))
 
 plot.data <- melt(comb.org.pub.topics, measure.vars=4:23, 
                   id.vars=c("organization", "publication"), 
                   variable.name="topic", value.name="proportion") %>%
-  filter(organization %in% organizations) %>%
+  filter(organization %in% top.organizations) %>%
   filter(topic != "X0") %>%
   mutate(organization = factor(organization, levels=top.organizations)) %>%
   mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
@@ -402,14 +332,14 @@ topics.avg <- melt.base %>%
   group_by(organization, source_type) %>%
   summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
-# Merge average topics into the df of all combinations, set missing to 0
+# Merge average topics into the df of org + source
 comb.org.source.topics <- comb.org.source %>%
   left_join(topics.avg, by=c("organization", "source_type"))
 
 plot.data <- melt(comb.org.source.topics, measure.vars=4:23, 
                   id.vars=c("organization", "source_type"), 
                   variable.name="topic", value.name="proportion") %>%
-  filter(organization %in% organizations) %>%
+  filter(organization %in% top.organizations) %>%
   filter(topic != "X0") %>%
   mutate(organization = factor(organization, levels=top.organizations)) %>%
   mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
@@ -453,42 +383,57 @@ embed_fonts("../Output/plot_source_pub.pdf")
 
 
 
+#-------
 # Poop
-# TODO: Topics + organization
-# TODO: Topics with more NGO sources by type
-# TODO: Which topics use direct quotes more
-# TODO: Topics by organization (EIPR covered across different topics)
-org.source.topics.summary <- org.source.topics %>%
+#-------
+
+#-------------------------------------------------------
+# Analyze average topics by organization + publication
+#-------------------------------------------------------
+# Find average topics for each organization in each publication
+org.topics <- org.source.topics %>%
   group_by(organization, publication) %>%
   summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
   left_join(ngo.counts, by=c("organization", "publication")) %>%
   arrange(desc(count))
-org.source.topics.summary
 
+# Reshape for plotting
+org.topics.long <- melt(org.topics, id.vars=c("organization", "publication"), 
+                        variable.name="topic") %>%
+  filter(topic != "count")
 
-# Filter full data to only include top sourced articles
-more.than.five <- source.orgs %>%
-  filter(organization %in% top.orgs) %>%
-  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
-
-asdf <- org.source.topics %>%
-  filter(organization %in% top.orgs) %>%
-  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
-
-qwer <- asdf %>%
-  group_by(organization, publication, source_type) %>%
-  summarise_each_q(funs(mean), 9:28)
-
-levels(qwer$source_type) <- c("Direct quote", "Paraphrase", 
-                              "Paraphrase", "Statement", "Statement")
-
-qwer.long <- melt(qwer, id.vars=c("organization", "publication", "source_type"), 
-                  variable.name="topic") %>%
-  filter(topic == "X0")
-
-p <- ggplot(data=na.omit(qwer.long), aes(x=organization, y=value, fill=source_type))
+# BUG: The rows with 0 counts are missing, leading to goofy bar widths
+p <- ggplot(data=org.topics.long, aes(x=organization, y=value, fill=publication))
 p + geom_bar(stat="identity", position="dodge") + 
+  labs(x=NULL, y="Average proportion") + 
+  theme_ath(10) + 
+  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
+        legend.key=element_blank()) + 
+  scale_fill_manual(values=publication.colors, name="") + 
   coord_flip() + facet_wrap(~ topic)
 
 
-# TODO: THIS FIRST - start simple - topics in each organization. Then topics + organization + source type; topics + organization + publication; topics + source_type; topics + publication
+#----------------------------------------------------
+# Analyze organizations + source type + publication
+#----------------------------------------------------
+# Filter full data to only include top sourced articles
+more.than.five <- melt.base %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
+
+# Crosstab and convert to dataframe for plotting
+org.source.pub.tab <- xtabs(~ organization + publication + source_type, 
+                            data=more.than.five)
+org.source.pub.tab.prop <- prop.table(org.source.pub.tab, c(1,3))
+chisq.test(org.source.pub.tab)
+
+# Pretty pictures
+plot.data <- as.data.frame(org.source.pub.tab)
+p <- ggplot(plot.data, aes(x=organization, y=Freq, fill=publication))
+p + geom_bar(stat="identity", position="dodge") + coord_flip() + 
+  labs(x=NULL, y="Articles where used as source") + 
+  theme_ath(10) + theme_bar + 
+  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
+        legend.key=element_blank()) + 
+  scale_fill_manual(values=publication.colors, name="") + 
+  facet_wrap(~ source_type)
