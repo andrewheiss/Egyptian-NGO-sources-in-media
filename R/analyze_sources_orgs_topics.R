@@ -393,6 +393,38 @@ ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf",
 embed_fonts("../Output/plot_source_pub.pdf")
 
 
+#------------------------------
+# Source type by organization
+#------------------------------
+# All combinations
+comb.org.source <- melt.base %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE)) %>%
+  xtabs(formula = ~ organization + source_type) %>% 
+  as.data.frame() %>% select(-Freq)
+
+# Get the average of each topic for each org + source
+topics.avg <- melt.base %>%
+  group_by(organization, source_type) %>%
+  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+
+# Merge average topics into the df org + source
+comb.org.source.topics <- comb.org.source %>%
+  left_join(topics.avg, by=c("organization", "source_type"))
+
+plot.data <- melt(comb.org.source.topics, id.vars=c("organization", "source_type"), 
+                  variable.name="topic") %>%
+  filter(topic != "X0") %>%
+  left_join(topics, by="topic")
+
+# TODO: Finish this plot
+p <- ggplot(data=plot.data, aes(x=organization, y=value, fill=source_type))
+plot.source.org <- p + geom_bar(stat="identity", position="dodge") + 
+  coord_flip() + facet_wrap(~ label) + theme_ath(8)
+
+ggsave(plot.source.org, filename="../Output/plot_source_org.pdf", 
+       width=5.5, height=4, units="in")
+embed_fonts("../Output/plot_source_org.pdf")
 
 
 #-------
