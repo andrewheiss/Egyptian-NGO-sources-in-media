@@ -109,8 +109,8 @@ mention.summary <- mention.summary %>%
   arrange(desc(Total))
 
 # Export to Markdown
-cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3,
-                        justify="left", caption="Number of organization mentions in each publication"),
+cat(pandoc.table.return(mention.summary, split.tables=Inf, digits=3, justify="left", 
+  caption="Number of organization mentions in each publication"),
     file="../Output/mention_summary.md")
 
 
@@ -235,3 +235,12 @@ p + geom_bar(stat="identity", position="dodge") +
         legend.key=element_blank()) + 
   scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
   coord_flip() + facet_wrap(~ topic)
+
+
+#--------------------------------------------------
+# Analyze all the things
+# topics + organizations + sources + publication 
+#--------------------------------------------------
+# TODO: Topics + organization
+# TODO: Topics with more NGO sources by type
+# TODO: Which topics use direct quotes more
