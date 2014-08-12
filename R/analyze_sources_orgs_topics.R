@@ -314,52 +314,12 @@ p + geom_bar(stat="identity", position="dodge") +
   coord_flip() + facet_wrap(~ topic)
 
 
+#----------------------------------------------------
 #--------------------------------------------------
 # Analyze all the things
 # topics + organizations + sources + publication 
 #--------------------------------------------------
-# TODO: Topics + organization
-# TODO: Topics with more NGO sources by type
-# TODO: Which topics use direct quotes more
-# TODO: Topics by organization (EIPR covered across different topics)
-org.source.topics.summary <- org.source.topics %>%
-  group_by(organization, publication) %>%
-  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
-  left_join(ngo.counts, by=c("organization", "publication")) %>%
-  arrange(desc(count))
-org.source.topics.summary
-
-
-# Filter full data to only include top sourced articles
-more.than.five <- source.orgs %>%
-  filter(organization %in% top.orgs) %>%
-  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
-
-asdf <- org.source.topics %>%
-  filter(organization %in% top.orgs) %>%
-  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
-
-qwer <- asdf %>%
-  group_by(organization, publication, source_type) %>%
-  summarise_each_q(funs(mean), 9:28)
-
-levels(qwer$source_type) <- c("Direct quote", "Paraphrase", 
-                              "Paraphrase", "Statement", "Statement")
-
-qwer.long <- melt(qwer, id.vars=c("organization", "publication", "source_type"), 
-                        variable.name="topic") %>%
-  filter(topic == "X0")
-
-p <- ggplot(data=na.omit(qwer.long), aes(x=organization, y=value, fill=source_type))
-p + geom_bar(stat="identity", position="dodge") + 
-  coord_flip() + facet_wrap(~ topic)
-
-
-
-
-# TODO: THIS FIRST - start simple - topics in each organization. Then topics + organization + source type; topics + organization + publication; topics + source_type; topics + publication
-
-
+#----------------------------------------------------
 
 #--------------------------------------
 # Plot average topics per publication
@@ -489,3 +449,46 @@ plot.source.pub <- p + geom_bar(aes(y=(count)/sum(count)),
 ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf", 
        width=5.5, height=4, units="in")
 embed_fonts("../Output/plot_source_pub.pdf")
+
+
+
+
+# Poop
+# TODO: Topics + organization
+# TODO: Topics with more NGO sources by type
+# TODO: Which topics use direct quotes more
+# TODO: Topics by organization (EIPR covered across different topics)
+org.source.topics.summary <- org.source.topics %>%
+  group_by(organization, publication) %>%
+  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  left_join(ngo.counts, by=c("organization", "publication")) %>%
+  arrange(desc(count))
+org.source.topics.summary
+
+
+# Filter full data to only include top sourced articles
+more.than.five <- source.orgs %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
+
+asdf <- org.source.topics %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE))
+
+qwer <- asdf %>%
+  group_by(organization, publication, source_type) %>%
+  summarise_each_q(funs(mean), 9:28)
+
+levels(qwer$source_type) <- c("Direct quote", "Paraphrase", 
+                              "Paraphrase", "Statement", "Statement")
+
+qwer.long <- melt(qwer, id.vars=c("organization", "publication", "source_type"), 
+                  variable.name="topic") %>%
+  filter(topic == "X0")
+
+p <- ggplot(data=na.omit(qwer.long), aes(x=organization, y=value, fill=source_type))
+p + geom_bar(stat="identity", position="dodge") + 
+  coord_flip() + facet_wrap(~ topic)
+
+
+# TODO: THIS FIRST - start simple - topics in each organization. Then topics + organization + source type; topics + organization + publication; topics + source_type; topics + publication
