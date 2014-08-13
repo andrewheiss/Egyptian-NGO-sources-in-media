@@ -4,8 +4,6 @@
 # Last updated:   2014-08-11
 # R version:      ≥3.0
 
-# TODO: Space after horizontal legend labels
-
 #--------------------------
 # Load libraries and data
 #--------------------------
@@ -38,7 +36,6 @@ org.sources.full <- readWorksheet(org.sources.wb, sheet="Sheet1")
 #-------------------------
 # Initial data wrangling
 #-------------------------
-# TODO: Bring in topic short names and dirichlet params
 # Add primary keys to topics
 topic.docs <- topic.docs %>%
   mutate(article_id = gsub("\\.txt", "", rownames(topic.docs)))
@@ -85,7 +82,6 @@ org.source.topics <- merge(topic.docs, org.sources, by="article_id") %>%
 
 # Get the order and counts of mentioned NGOs
 # summarise_each wipes out existing columns, so get the counts first
-# TODO: Subset by used_as_source once that data's done
 ngo.counts <- org.source.topics %>% 
   group_by(organization, publication) %>% summarise(count=n()) %>% arrange(desc(count))
 
@@ -146,6 +142,7 @@ top.orgs <- unique(factor(top.orgs.raw$organization,
 # Plotting variables
 #---------------------
 publication.colors <- c("#e41a1c", "#377eb8", "#e6ab02")
+source.colors <- c("#a741e4", "#219758", "#e86d24")
 
 theme_ath <- function(base_size=12) {
   ret <- theme_bw(base_size) + 
@@ -273,6 +270,7 @@ cat(pandoc.table.return(nice.table, justify="left",
 # Plot average topics per publication
 #--------------------------------------
 plot.pub.topics <- org.source.topics %>%
+  mutate(publication = add.padding(publication)) %>%
   group_by(publication) %>%
   summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
   select(-X0) %>%
@@ -319,7 +317,8 @@ plot.data <- melt(comb.org.pub.topics, measure.vars=4:23,
   filter(topic != "X0") %>%
   mutate(organization = factor(organization, levels=top.organizations)) %>%
   mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
-  left_join(topics, by="topic")
+  left_join(topics, by="topic") %>%
+  mutate(publication = add.padding(publication))
 
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=publication))
 plot.topic.pub.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
@@ -361,7 +360,8 @@ plot.data <- melt(comb.org.source.topics, measure.vars=4:23,
   filter(topic != "X0") %>%
   mutate(organization = factor(organization, levels=top.organizations)) %>%
   mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
-  left_join(topics, by="topic")
+  left_join(topics, by="topic") %>%
+  mutate(source_type = add.padding(source_type))
 
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=source_type))
 plot.topic.source.org <- p + geom_point(aes(size=dirichlet), alpha=0.9, 
@@ -369,7 +369,7 @@ plot.topic.source.org <- p + geom_point(aes(size=dirichlet), alpha=0.9,
   labs(x=NULL, y="\nMean proportion of topic in corpus") + 
   theme_ath(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) + 
-  scale_colour_manual(values=publication.colors, name="") + 
+  scale_colour_manual(values=source.colors, name="") + 
   scale_size_continuous(range = c(2, 7), 
                         name=expression(paste("Proportion (", alpha, ")"))) + 
   facet_wrap(~ organization)
@@ -383,6 +383,7 @@ embed_fonts("../Output/plot_topic_source_org.pdf")
 # Source by publication
 #------------------------
 plot.data <- melt.base %>%
+  mutate(publication = add.padding(publication)) %>%
   group_by(publication, source_type) %>%
   summarise(count = n())
 
@@ -391,7 +392,7 @@ plot.source.pub <- p + geom_bar(aes(y=(count)/sum(count)),
                                 stat="identity", position="dodge") + 
   labs(x="\nType of source", y="Proportion\n") + 
   theme_ath(8) + theme_bar + 
-  scale_y_continuous(labels = percent) + 
+  scale_y_continuous(labels=percent) + 
   scale_fill_manual(values=publication.colors, name="")
 
 ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf", 
@@ -421,51 +422,66 @@ comb.org.source.topics <- comb.org.source %>%
 plot.data <- melt(comb.org.source.topics, id.vars=c("organization", "source_type"), 
                   variable.name="topic") %>%
   filter(topic != "X0") %>%
-  left_join(topics, by="topic")
+  left_join(topics, by="topic") %>%
+  mutate(source_type = add.padding(source_type))
 
-# TODO: Finish this plot
 p <- ggplot(data=plot.data, aes(x=organization, y=value, fill=source_type))
 plot.source.org <- p + geom_bar(stat="identity", position="dodge") + 
-  coord_flip() + facet_wrap(~ label) + theme_ath(8)
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  coord_flip() + facet_wrap(~ label) + 
+  theme_ath(8) + theme_bar + 
+  scale_y_continuous(labels=percent) + 
+  scale_fill_manual(values=source.colors, name="")
 
 ggsave(plot.source.org, filename="../Output/plot_source_org.pdf", 
-       width=5.5, height=4, units="in")
+       width=11, height=8.5, units="in")
 embed_fonts("../Output/plot_source_org.pdf")
+
+
+#-----------------------------
+# Top organizations by topic
+#-----------------------------
+comb.org.pub.topic <- melt.base %>%
+  filter(organization %in% top.orgs) %>%
+  mutate(organization = factor(organization, levels=rev(top.orgs), ordered=TRUE)) %>%
+  xtabs(formula = ~ organization + publication) %>% 
+  as.data.frame() %>% select(-Freq)
+
+# Get the average of each topic for each org + publication
+topics.avg <- melt.base %>%
+  group_by(organization, publication) %>%
+  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+
+# Merge average topics into the df org + publication
+comb.org.pub.topics <- comb.org.pub.topic %>%
+  left_join(topics.avg, by=c("organization", "publication"))
+
+plot.data <- melt(comb.org.pub.topics, id.vars=c("organization", "publication"), 
+                  variable.name="topic") %>%
+  filter(topic != "X0") %>%
+  left_join(topics, by="topic") %>%
+  mutate(publication = add.padding(publication))
+
+p <- ggplot(data=plot.data, aes(x=organization, y=value, fill=publication))
+plot.pub.org <- p + geom_bar(stat="identity", position="dodge") + 
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  coord_flip() + facet_wrap(~ label) + 
+  theme_ath(8) + theme_bar + 
+  scale_y_continuous(labels=percent) + 
+  scale_fill_manual(values=publication.colors, name="", guide = guide_legend(label.hjust=1))
+
+ggsave(plot.pub.org, filename="../Output/plot_pub_org.pdf", 
+       width=11, height=8.5, units="in")
+embed_fonts("../Output/plot_pub_org.pdf")
 
 
 #-------
 # Poop
 #-------
-
-#-------------------------------------------------------
-# Analyze average topics by organization + publication
-#-------------------------------------------------------
-# Find average topics for each organization in each publication
-org.topics <- org.source.topics %>%
-  group_by(organization, publication) %>%
-  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
-  left_join(ngo.counts, by=c("organization", "publication")) %>%
-  arrange(desc(count))
-
-# Reshape for plotting
-org.topics.long <- melt(org.topics, id.vars=c("organization", "publication"), 
-                        variable.name="topic") %>%
-  filter(topic != "count")
-
-# BUG: The rows with 0 counts are missing, leading to goofy bar widths
-p <- ggplot(data=org.topics.long, aes(x=organization, y=value, fill=publication))
-p + geom_bar(stat="identity", position="dodge") + 
-  labs(x=NULL, y="Average proportion") + 
-  theme_ath(10) + 
-  theme(legend.position="bottom", legend.key.size=unit(.7, "line"), 
-        legend.key=element_blank()) + 
-  scale_fill_manual(values=publication.colors, name="") + 
-  coord_flip() + facet_wrap(~ topic)
-
-
 #----------------------------------------------------
 # Analyze organizations + source type + publication
 #----------------------------------------------------
+# TODO: Streamline this
 # Filter full data to only include top sourced articles
 more.than.five <- melt.base %>%
   filter(organization %in% top.orgs) %>%
@@ -478,7 +494,8 @@ org.source.pub.tab.prop <- prop.table(org.source.pub.tab, c(1,3))
 chisq.test(org.source.pub.tab)
 
 # Pretty pictures
-plot.data <- as.data.frame(org.source.pub.tab)
+plot.data <- as.data.frame(org.source.pub.tab) %>% 
+  mutate(publication = add.padding(publication))
 p <- ggplot(plot.data, aes(x=organization, y=Freq, fill=publication))
 p + geom_bar(stat="identity", position="dodge") + coord_flip() + 
   labs(x=NULL, y="Articles where used as source") + 
