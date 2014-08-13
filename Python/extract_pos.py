@@ -31,7 +31,7 @@ with open('Data/ngos.csv', 'r') as f:
   next(ngo_list, None)  # Skip the header row (alternatively save to a variable)
   organizations = [org[0] for org in ngo_list]  # Read just the first column
 
-with open('Data/ngo_mentions.obj', 'rb')  as p:
+with open('Data/ngo_mentions.obj', 'rb') as p:
   db_ids = pickle.load(p)
 
 # Load NLTK sentence tokenizer
@@ -57,6 +57,8 @@ global_row += 1
 #-------------------------------
 # Loop through all the corpora
 #-------------------------------
+all_verbs = []  # Initialize global list
+
 for db in db_ids.keys():
   database = 'Corpora/{0}.db'.format(db)
   
@@ -100,6 +102,7 @@ for db in db_ids.keys():
       # Tag parts of speech for the sentence
       tagged = nltk.pos_tag(nltk.word_tokenize(sentences[current_sentence]))
       verbs = [verb[0] for verb in tagged if 'VB' in verb[1]]
+      all_verbs.append(verbs)  # Add to global list
 
       # Get article information
       id_article = row['id_article']
@@ -130,6 +133,25 @@ for db in db_ids.keys():
           worksheet.write(global_row, col, spreadsheet_row[col])
         global_row += 1
 
-
 # My work here is done.
-workbook.close()  
+workbook.close()
+
+
+#-----------------------------------
+# Save global list of verbs to CSV
+#-----------------------------------
+# Flatten the list of verbs
+all_verbs = [item.lower() for sublist in all_verbs for item in sublist]
+
+# Dictionary comprehension to determine counts
+verbs_dict = {x:all_verbs.count(x) for x in all_verbs}
+
+# Create a sorted list of (verb, count) tuples
+verbs_sorted = sorted(verbs_dict.items(), key=lambda x:x[1], reverse=True)
+
+# Write to CSV
+with open('Output/verb_list.csv', 'w') as csv_file:
+  csv_out = csv.writer(csv_file, delimiter=',', quoting=csv.QUOTE_ALL)
+  csv_out.writerow(['verb', 'count'])
+  for row in verbs_sorted:
+    csv_out.writerow(row)
