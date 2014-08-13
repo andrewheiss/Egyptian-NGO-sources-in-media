@@ -165,6 +165,12 @@ theme_dotplot <- theme(panel.grid.major.y=element_line(size=.6), legend.title.al
 theme_bar <- theme(panel.grid.major.x=element_blank(), axis.ticks.y=element_blank(),
                    legend.key.size=unit(.7, "line"))
 
+add.padding <- function(x) {
+  first.part <- paste0(levels(x)[-length(levels(x))], "   ")
+  last.part <- levels(x)[length(levels(x))]
+  levels(x) <- c(first.part, last.part)
+  x
+}
 
 #----------------------------------------
 # Analyze sourced vs. mentioned sources
