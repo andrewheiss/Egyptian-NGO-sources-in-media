@@ -25,6 +25,7 @@ generate data:
             python3 Python/extract_pos.py
         output:
             - ./Output/source_list_WILL_BE_OVERWRITTEN.xlsx
+            - ./Output/verb_list.csv
     export articles:
         help: export articles from SQLite databases and stem and n-gram them
         dependencies: 
