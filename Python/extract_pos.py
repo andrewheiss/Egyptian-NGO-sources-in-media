@@ -86,6 +86,7 @@ for db in db_ids.keys():
     # NLTK's tagger returns the following parts of speech (not a complete list):
     #   noun (NN), adjective (JJ), determiner (DT), verb (VB), noun phrase (NP),
     #   sentence subject (SBJ), and prepositional noun phrase (PNP)
+    # Full list at http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
     article = row['article_content_no_tags']
     sentences = sentence_detector.tokenize(article)
 
