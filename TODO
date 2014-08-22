@@ -1,36 +1,5 @@
-What hypotheses do we hope to prove? 
-More NGO mentions in state media? Type of mention… more direct quotes in independent media? Topics covered different?
-
-
-- Source vs. no source per publication @done
-- Source type vs. publication @done
-
-- Organizations vs. source type @done
-- Organizations sourced vs. mentioned @done
-
-- Topics + organization
-- Topics with more NGO sources by type
-- Which topics use direct quotes more
-
-
-Which ones quoted more - which sources more
-Which topics + organizaitons
-
-Which topics have NGOs as sources more
-Which topics quote specific NGOs more
-
-OH NOES: Hisham Mubarak Center for Law
-
-Simple, Murdie-like explanations of methods, relegating complicated stuff to the footnotes
-
-Add reference to Bob:2005?
-
-
-TODO: How are organizations used? Press release vs. website vs. quoted person (who - kind of person, spokesperson, activist, etc.) vs. just a mention (+some sort of international tie?)
-TODO: Topics in articles where NGO is used as a source vs. just a mention; publications that use them as sources more - source:mention ratio - types of sourcing per publication - topics
+OHNOES: Hisham Mubarak Center for Law
 LATER: Automate way of determining source usage? 
-
 MAYBE: Use NLTK 3.0 in process_natural_language.py
 MAYBE: Use NLTK instead of TextBlob in extract_pos.py
-
 MAYBE: Stanford shift-reduce parser better than PCFG parse - open CoreNLP using a socket from Python and interact from there (via @johnb30)
