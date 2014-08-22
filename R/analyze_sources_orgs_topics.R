@@ -410,6 +410,11 @@ coindep_test(source.type.pub, n=5000)
 cell.colors <- cbind(matrix(publication.colors, 3, 3),
                      c("#7c1116", "#193a51", "#7f5c03"))
 
+# Save the mosaic plot to PDF
+# I wish this were easier, like ggsave!
+# dev.control(...) is needed to plot noninteractively
+pdf("../Output/plot_mosaic.pdf", width=3, height=3)
+dev.control(displaylist="enable")
 mosaic(source.type.pub, pop=FALSE,
        labeling_args=list(set_varnames=c(source_type="Type of source", 
                                          publication="Publication"),
@@ -420,13 +425,10 @@ mosaic(source.type.pub, pop=FALSE,
 # Add counts
 labeling_cells(text=source.type.pub, gp_text=gpar(fontsize=8))(source.type.pub)
 final.mosaic <- recordPlot()
-
-# BUG: This doesn't work from Sake...
-pdf("../Output/plot_mosaic.pdf", width=3, height=3)
-final.mosaic
 dev.off()
 embed_fonts("../Output/plot_mosaic.pdf")
 
+# Save as PNG
 png("../Output/plot_mosaic.png", width=3, height=3, units="in", res=300)
 final.mosaic
 dev.off()
