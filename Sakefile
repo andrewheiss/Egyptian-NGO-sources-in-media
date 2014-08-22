@@ -13,6 +13,8 @@ generate data:
         output:
             - ./Data/ngo_mentions.obj
             - ./Data/ngo_mention_ids.csv
+            - ./Data/publication_counts.csv
+            - ./Data/month_year_counts.csv
     extract pos:
         help: extract verbs from sentences that mention NGOs
         dependencies: 
@@ -81,19 +83,37 @@ analyze data:
             - ./Data/topic-doctopics.txt
             - ./Data/topic-docs.csv
 
-
-# generate output:
-#     help: generate all output for the paper and presentation
-#     output summary tables: 
-#         help: "summary tables of corpus, NGOs, and model"
-#         dependencies:
-#             - ./Data/topic_model.RData
-#             - ./Data/full_text.RData
-#             - ./R/summary_tables.R
-#         formula: >
-#             cd R; Rscript summary_tables.R
-#         output:
-#             - ./Output/table_corpus_summary.md
-#             - ./Output/table_ngo_list.md
-#             - ./Output/table_topic_model.md
+generate output:
+    help: generate all output for the paper and presentation
+    output analysis:
+        help: "summary tables and plots of sources, organzations, and topics"
+        dependencies: 
+            - ./Data/topic_model.RData
+            - ./Data/mentions_data.RData
+            - ./Data/full_text.RData
+            - ./Data/source_list.xlsx
+            - ./Data/publication_counts.csv
+            - ./Data/month_year_counts.csv
+        formula: >
+            cd R; Rscript analyze_sources_orgs_topics.R
+        output:
+            - ./Output/table_topic_model.md
+            - ./Output/table_article_validation.md
+            - ./Output/table_source_mention_ratio.md
+            - ./Output/table_source_organization.md
+            - ./Output/table_source_publication.md
+            - ./Output/plot_article_validation.pdf
+            - ./Output/plot_article_validation.png
+            - ./Output/plot_org_topic_validation.pdf
+            - ./Output/plot_org_topic_validation.png
+            - ./Output/plot_sources_time.pdf
+            - ./Output/plot_sources_time.png
+            - ./Output/plot_mosaic.pdf
+            - ./Output/plot_mosaic.png
+            - ./Output/plot_source_pub.pdf
+            - ./Output/plot_source_pub.png
+            - ./Output/plot_topic_pub.pdf
+            - ./Output/plot_topic_pub.png
+            - ./Output/plot_topic_pub_org.pdf
+            - ./Output/plot_topic_pub_org.png
 ...
