@@ -1,6 +1,9 @@
 library(pander)
 library(dplyr)
 
+# TODO: Document this or merge it with summary_tables.R
+# TODO: Add these tables to Sakefile
+
 verbs <- read.csv("../Output/verb_list.csv", header=TRUE) %>%
   arrange(desc(count))
 
