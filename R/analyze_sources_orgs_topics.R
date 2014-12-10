@@ -114,7 +114,7 @@ all.combinations <- melt.base %>%
 # Get the average of each topic for each org + source + publication
 topics.avg <- melt.base %>%
   group_by(organization, source_type, publication) %>%
-  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+  summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
 # Merge average topics into the df of all combinations, set missing to 0
 all.combinations.topics <- all.combinations %>%
@@ -234,7 +234,7 @@ comb.org.pub.topic <- melt.base %>%
 # Get the average of each topic for each org + publication
 topics.avg <- melt.base %>%
   group_by(organization) %>%
-  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+  summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
 # Merge average topics into the df org + publication
 comb.org.pub.topics <- comb.org.pub.topic %>%
@@ -371,6 +371,23 @@ source.summary <- source.summary %>%
   mutate(Organization = as.character(Organization)) %>%
   arrange(desc(Total))
 
+plot.data <- select(source.summary, -c(Total, Percent)) %>%
+  melt(id.vars="Organization") %>%
+  filter(Organization %in% top.orgs) %>%
+  mutate(Organization = factor(Organization, levels=rev(source.summary$Organization), ordered=TRUE))
+
+p <- ggplot(plot.data, aes(x=Organization, y=value, fill=variable)) 
+plot.source.organization <- p + geom_bar(stat="identity", position="dodge") + 
+  coord_flip() + labs(x=NULL, y="Number of articles\n") + 
+  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  theme_ath(8) + theme(legend.key = element_blank())
+
+ggsave(plot=plot.source.organization, filename="../Output/plot_source_organization.png", 
+       width=5.5, height=4, units="in")
+ggsave(plot=plot.source.organization, filename="../Output/plot_source_organization.pdf", 
+       width=5.5, height=4, units="in", dpi=300)
+embed_fonts("../Output/plot_source_organization.pdf")
+
 source.summary <- rbind(source.summary, c("Total", sum(source.summary[,2]), 
                                           sum(source.summary[,3]), sum(source.summary[,4]), 
                                           sum(source.summary[,5]), "&nbsp;"))
@@ -380,6 +397,7 @@ cat(pandoc.table.return(source.summary, split.tables=Inf, digits=3,
                         justify=c("left", rep("center", 5)), 
                         caption="Frequency of use as source in each publication"),
     file="../Output/table_source_organization.md")
+
 
 
 #------------------------------------
@@ -444,7 +462,7 @@ nice.table <- as.data.frame(addmargins(prop.table(source.type.pub, 2), 1)) %>%
   mutate(Freq = paste(round(Freq*100, 2), "%", sep=""))
 nice.table <- dcast(nice.table, publication ~ source_type, value.var="Freq") %>%
   select(Publication = publication, 2:4)
-cat(pandoc.table.return(nice.table, justify=c("left", rep("center", 4)), 
+cat(pandoc.table.return(nice.table, justify=c("left", rep("center", 3)), 
                         split.tables=Inf, caption="Percent of source type per publication"),
     file="../Output/table_source_publication.md")
 
@@ -480,7 +498,7 @@ embed_fonts("../Output/plot_source_pub.pdf")
 plot.pub.topics <- org.source.topics %>%
   filter(used_as_source == "Yes") %>%
   group_by(publication) %>%
-  summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  summarise_each(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
   select(-X0) %>%
   melt(measure.vars=2:20, id.vars=c("publication"), 
        variable.name="topic", value.name="proportion") %>%
@@ -524,7 +542,7 @@ comb.org.pub <- melt.base %>%
 topics.avg <- melt.base %>%
   filter(used_as_source == "Yes") %>%
   group_by(organization, publication) %>%
-  summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+  summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
 # Merge average topics into the df org + publication
 comb.org.pub.topics <- comb.org.pub %>%
@@ -567,53 +585,53 @@ embed_fonts("../Output/plot_topic_pub_org.pdf")
 # Poop
 #-------
 
-# #--------------------------------------
-# # Plot average topics per source type
-# #--------------------------------------
-# # Create org + publication data frame
-# comb.org.pub <- melt.base %>%
-#   filter(used_as_source == "Yes") %>%
-#   xtabs(formula = ~ organization + publication) %>% 
-#   as.data.frame()
+#--------------------------------------
+# Plot average topics per source type
+#--------------------------------------
+# Create org + publication data frame
+comb.org.pub <- melt.base %>%
+  filter(used_as_source == "Yes") %>%
+  xtabs(formula = ~ organization) %>% 
+  as.data.frame()
 
-# # Get the average of each topic for each org + source + publication
-# topics.avg <- melt.base %>%
-#   filter(used_as_source == "Yes") %>%
-#   group_by(organization, publication) %>%
-#   summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+# Get the average of each topic for each org + source + publication
+topics.avg <- melt.base %>%
+  filter(used_as_source == "Yes") %>%
+  group_by(organization) %>%
+  summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
-# plot.source.topics <- melt.base %>%
-#   filter(used_as_source == "Yes") %>%
-#   group_by(source_type, publication) %>%
-#   summarise_each_q(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
-#   select(-X0) %>%
-#   melt(measure.vars=2:20, id.vars=c("source_type"), 
-#        variable.name="topic", value.name="proportion") %>%
-#   left_join(topics, by="topic") %>%
-#   arrange(source_type, proportion)
+plot.source.topics <- melt.base %>%
+  filter(used_as_source == "Yes") %>%
+  group_by(source_type) %>%
+  summarise_each(funs(mean), 9:28) %>%  # Or funs(mean, sd) to get both
+  select(-X0) %>%
+  melt(measure.vars=2:20, id.vars=c("source_type"), 
+       variable.name="topic", value.name="proportion") %>%
+  left_join(topics, by="topic") %>%
+  arrange(source_type, proportion)
 
-# quote.order <- plot.source.topics %>%
-#   filter(source_type == "Direct quote") %>%
-#   arrange(proportion) %>% select(label)
+quote.order <- plot.source.topics %>%
+  filter(source_type == "Direct quote") %>%
+  arrange(proportion) %>% select(label)
 
-# plot.pub.topics <- plot.pub.topics %>%
-#   mutate(source_type = add.padding(source_type)) %>%
-#   mutate(label.quote = factor(label, levels=quote.order$label, ordered=TRUE))
+plot.source.topics <- plot.source.topics %>%
+  mutate(source_type = add.padding(source_type)) %>%
+  mutate(label.quote = factor(label, levels=quote.order$label, ordered=TRUE))
 
-# p <- ggplot(plot.pub.topics, aes(x=label.quote, y=proportion, colour=source_type))
-# plot.topic.source <- p + geom_point(aes(size=dirichlet), alpha=0.9) + 
-#   labs(x=NULL, y="\nMean proportion of topic in corpus") + 
-#   theme_ath(8) + theme_dotplot + 
-#   coord_flip() + scale_y_continuous(labels=percent) + 
-#   scale_colour_manual(values=source.colors, name="") + 
-#   scale_size_continuous(range = c(2, 7), 
-#                         name=expression(paste("Proportion (", alpha, ")")))
+p <- ggplot(plot.source.topics, aes(x=label.quote, y=proportion, colour=source_type))
+plot.topic.source <- p + geom_point(aes(size=dirichlet), alpha=0.9) + 
+  labs(x=NULL, y="\nMean proportion of topic in corpus") + 
+  theme_ath(8) + theme_dotplot + 
+  coord_flip() + scale_y_continuous(labels=percent) + 
+  scale_colour_manual(values=source.colors, name="") + 
+  scale_size_continuous(range = c(2, 7), 
+                        name=expression(paste("Proportion (", alpha, ")")))
 
-# ggsave(plot.topic.source, filename="../Output/plot_topic_source.png", 
-#        width=5.5, height=4, units="in")
-# ggsave(plot.topic.source, filename="../Output/plot_topic_source.pdf", 
-#        width=5.5, height=4, units="in")
-# embed_fonts("../Output/plot_topic_source.pdf")
+ggsave(plot.topic.source, filename="../Output/plot_topic_source.png", 
+       width=5.5, height=4, units="in")
+ggsave(plot.topic.source, filename="../Output/plot_topic_source.pdf", 
+       width=5.5, height=4, units="in")
+embed_fonts("../Output/plot_topic_source.pdf")
 
 
 # #----------------------------------------
@@ -627,7 +645,7 @@ embed_fonts("../Output/plot_topic_pub_org.pdf")
 # # Get the average of each topic for each org + source + publication
 # topics.avg <- melt.base %>%
 #   group_by(organization, source_type) %>%
-#   summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+#   summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
 # # Merge average topics into the df of org + source
 # comb.org.source.topics <- comb.org.source %>%
@@ -674,7 +692,7 @@ embed_fonts("../Output/plot_topic_pub_org.pdf")
 # # Get the average of each topic for each org + source
 # topics.avg <- melt.base %>%
 #   group_by(organization, source_type) %>%
-#   summarise_each_q(funs(mean), 9:28)  # Or funs(mean, sd) to get both
+#   summarise_each(funs(mean), 9:28)  # Or funs(mean, sd) to get both
 
 # # Merge average topics into the df org + source
 # comb.org.source.topics <- comb.org.source %>%
