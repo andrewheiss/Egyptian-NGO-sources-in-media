@@ -183,6 +183,11 @@ cat(pandoc.table.return(topic.summary, split.tables=Inf, digits=3,
                         justify="left", caption="Topic model summary"), 
     file="../Output/table_topic_model.md")
 
+<<<<<<< HEAD
+=======
+# BUG: The α in the header of the table makes the last two column headers shift funny
+
+>>>>>>> origin/master
 
 #---------------------
 # Article validation
@@ -463,8 +468,37 @@ nice.table <- dcast(nice.table, publication ~ source_type, value.var="Freq") %>%
 cat(pandoc.table.return(nice.table, justify=c("left", rep("center", 3)), 
                         split.tables=Inf, caption="Percent of source type per publication"),
     file="../Output/table_source_publication.md")
+<<<<<<< HEAD
 
 
+#-----------------------------------------
+# Source type + individual + publication
+#-----------------------------------------
+plot.data <- melt.base %>%
+  mutate(publication = add.padding(publication)) %>%
+  group_by(publication, individual, source_type) %>%
+  summarise(count = n()) %>%
+  ungroup() %>%
+  mutate(individual = factor(individual, labels=c("Organization", "Individual")))
+
+p <- ggplot(na.omit(plot.data), aes(x=individual, fill=publication))
+plot.source.pub <- p + geom_bar(aes(y=(count)/sum(count)), 
+                                stat="identity", position="dodge") + 
+  labs(x=NULL, y="Proportion\n") + 
+  theme_ath(8) + theme_bar + 
+  scale_y_continuous(labels=percent) + 
+  scale_fill_manual(values=publication.colors, name="") + facet_wrap(~ source_type)
+=======
+>>>>>>> origin/master
+
+ggsave(plot.source.pub, filename="../Output/plot_source_pub.png", 
+       width=5.5, height=3, units="in")
+ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf", 
+       width=5.5, height=3, units="in")
+embed_fonts("../Output/plot_source_pub.pdf")
+
+<<<<<<< HEAD
+=======
 #-----------------------------------------
 # Source type + individual + publication
 #-----------------------------------------
@@ -489,6 +523,7 @@ ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf",
        width=5.5, height=3, units="in")
 embed_fonts("../Output/plot_source_pub.pdf")
 
+>>>>>>> origin/master
 
 #--------------------------------------
 # Plot average topics per publication
