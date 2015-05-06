@@ -15,6 +15,11 @@ Corpora/*.db
 *.RDataTmp
 *.Rhistory
 
+# Packrat
+.Rproj.user
+R/packrat/lib*/
+R/packrat/src/
+
 # MALLET stuff
 mallet/*
 
