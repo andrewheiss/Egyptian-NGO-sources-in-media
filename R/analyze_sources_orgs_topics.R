@@ -44,7 +44,7 @@ org.sources <- org.sources.full %>%
 ngos <- ngos %>% mutate(name.lc = tolower(search.name))
 
 # Deal with topic labels and dirichlet params
-short.names.actual <- c("Post-revolutionary Egypt (catch-all)", "Legislation and governance", "Muslim Brotherhood and constitution", "Military trials", "Protestors and activism?", "Public economics", "Religious issues", "Police arrests", "Environmental issues", "Human rights and civil society", "Sexual violence", "Protests and clashes", "Egyptian workers", "Elections", "Trials", "Sectarian issues", "Media and censorship", "Morsi", "Police torture", "Regime politics")
+short.names.actual <- c("Post-revolutionary Egypt (catch-all)", "Legislation and governance", "Muslim Brotherhood and constitution", "Military trials", "Protestors and activism", "Public economics", "Religious issues", "Police arrests", "Environmental issues", "Human rights and civil society", "Sexual violence", "Protests and clashes", "Egyptian workers", "Elections", "Trials", "Sectarian issues", "Media and censorship", "Morsi", "Police torture", "Regime politics")
 
 topics <- topic.keys.result %>%
   mutate(topic = factor(paste0("X", key))) %>%
@@ -138,8 +138,13 @@ top.orgs <- unique(factor(top.orgs.raw$organization,
 #---------------------
 # Plotting variables
 #---------------------
-publication.colors <- c("#e41a1c", "#377eb8", "#e6ab02")
-source.colors <- c("#a741e4", "#219758", "#e86d24")
+# publication.colors <- c("#e41a1c", "#377eb8", "#e6ab02")
+publication.colors <- c("#000000", "#636363", "#cccccc")
+# source.colors <- c("#a741e4", "#219758", "#e86d24")
+source.colors <- c("#000000", "#636363", "#cccccc")
+
+# validation.color <- "#8e6010"
+validation.color <- "#252525"
 
 theme_clean <- function(base_size=12, base_family="Frutiger LT Std 45 Light") {
   ret <- theme_bw(base_size, base_family) + 
@@ -152,8 +157,10 @@ theme_clean <- function(base_size=12, base_family="Frutiger LT Std 45 Light") {
           panel.grid.major.x = element_line(size=0.25, colour="grey90"),
           axis.ticks=element_blank(),
           legend.position="bottom", 
-          axis.title=element_text(size=rel(0.8), family="FrutigerLTStd-Bold", face="bold"),
-          strip.text=element_text(size=rel(0.9), family="FrutigerLTStd-Bold", face="bold"),
+          axis.title=element_text(size=rel(0.8), 
+                                  family="FrutigerLTStd-Bold", face="bold"),
+          strip.text=element_text(size=rel(0.9), 
+                                  family="FrutigerLTStd-Bold", face="bold"),
           strip.background=element_rect(fill="#ffffff", colour=NA),
           panel.margin=unit(1, "lines"), legend.key.size=unit(.7, "line"),
           legend.key=element_blank())
@@ -161,12 +168,7 @@ theme_clean <- function(base_size=12, base_family="Frutiger LT Std 45 Light") {
   ret
 }
 
-theme_dotplot <- theme(panel.grid.major.y=element_line(size=0.25),
-                       legend.title.align=0, legend.box.just="top",
-                       legend.direction="horizontal", legend.key=element_blank(),
-                       legend.box="horizontal", legend.key.size=unit(.7, "line"),
-                       legend.text=element_text(size=4), 
-                       legend.title=element_text(size=4))
+theme_dotplot <- theme(panel.grid.major.y=element_line(size=0.25))
 
 add.padding <- function(x) {
   first.part <- paste0(levels(x)[-length(levels(x))], "   ")
@@ -184,7 +186,7 @@ colnames(topic.summary) <- c("Dirichlet α", " Top ten words", " Short name")
 rownames(topic.summary) <- paste(" ", 1:nrow(topic.summary))  # To trick pander into thinking these are real rownames...
 
 cat(pandoc.table.return(topic.summary, split.tables=Inf, digits=3,
-                        justify="left", caption="Topic model summary"), 
+                        justify="left", caption="Topic model summary {#tbl:tm_summary}"), 
     file="../Output/table_topic_model.md")
 
 
@@ -200,7 +202,7 @@ colnames(output.table) <- c("Article ID", "Publication", "Article title")
 rownames(output.table) <- NULL
 
 cat(pandoc.table.return(output.table, split.tables=Inf, 
-                        justify="left", caption="Summary of randomly selected articles"),
+                        justify="left", caption="Summary of mentions and sourcing by publication {#tbl:article_validation}"),
     file="../Output/table_article_validation.md")
 
 plot.data <- validation %>%
@@ -252,7 +254,7 @@ plot.data <- melt(comb.org.pub.topics, id.vars=c("organization"),
 
 p <- ggplot(data=plot.data, aes(x=organization, y=value))
 org.topic.validation <- p + 
-  geom_bar(stat="identity", position="dodge", fill="#8e6010") + 
+  geom_bar(stat="identity", position="dodge", fill=validation.color) + 
   geom_vline(xintercept=seq(length(unique(plot.data$organization)) + 3.5 - 3, 0, by=-3), 
              colour="grey80", linetype="dotted", size=0.25) + 
   labs(x=NULL, y="Mean proportion of topic in corpus") + 
@@ -292,7 +294,7 @@ colnames(source.ratio) <- c("Publication", "Total articles", "Articles with NGO 
 
 cat(pandoc.table.return(source.ratio, justify=c("left", rep("center", 6)),
                         big.mark=",", digits=4, split.tables=Inf,
-                        caption="NGO mentions and sourced mentions by publication"),
+                        caption="NGO mentions and sourced mentions by publication {#tbl:source_mention_ratio}"),
     file="../Output/table_source_mention_ratio.md")
 
 
@@ -350,7 +352,7 @@ p <- ggplot(aes(x=as.Date(month), y=prop, colour=publication), data=plot.data)
 sources.over.time <- p + geom_line(size=1) + 
   scale_x_date(breaks="3 months", labels=date_format("%B %Y")) + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y="Proportion of articles that source NGOs") + 
-  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_colour_manual(values=publication.colors, name="") + 
   theme_clean(8) + theme(legend.key = element_blank(),
                          panel.grid.major.y = element_line(size=0.25, colour="grey90"))
 
@@ -385,7 +387,7 @@ plot.data <- select(source.summary, -c(Total, Percent)) %>%
 p <- ggplot(plot.data, aes(x=Organization, y=value, fill=variable)) 
 plot.source.organization <- p + geom_bar(stat="identity", position="dodge") + 
   coord_flip() + labs(x=NULL, y="Number of articles") + 
-  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_fill_manual(values=publication.colors, name="") + 
   theme_clean(8) + theme(legend.key = element_blank())
 
 ggsave(plot=plot.source.organization, filename="../Output/plot_source_organization.png", 
@@ -401,7 +403,7 @@ source.summary <- rbind(source.summary, c("Total", sum(source.summary[,2]),
 # Export to Markdown
 cat(pandoc.table.return(source.summary, split.tables=Inf, digits=3, 
                         justify=c("left", rep("center", 5)), 
-                        caption="Frequency of use as source in each publication"),
+                        caption="Frequency of use as a source in each publication {#tbl:source_organization}"),
     file="../Output/table_source_organization.md")
 
 
@@ -431,7 +433,8 @@ coindep_test(source.type.pub, n=5000)
 
 # Build mosaic plot
 cell.colors <- cbind(matrix(publication.colors, 3, 3),
-                     c("#7c1116", "#193a51", "#7f5c03"))
+                     c("#000000", "#444646", "#9b9b9c"))
+                     #c("#7c1116", "#193a51", "#7f5c03"))
 
 # Save the mosaic plot to PDF
 # I wish this were easier, like ggsave!
@@ -443,11 +446,12 @@ mosaic(source.type.pub, pop=FALSE,
                                          publication="Publication"),
                           gp_labels=(gpar(fontsize=7, 
                                           fontfamily="Frutiger LT Std 45 Light"))), 
-       gp=gpar(fill=cell.colors, col="white"), margins=unit(c(2, 0, 0, 0), "lines"),
+       gp=gpar(fill=cell.colors, col="#ffffff"), margins=unit(c(2, 0, 0, 0), "lines"),
        gp_varnames=gpar(fontsize=8, fontface=2, fontfamily="FrutigerLTStd-Bold"))
 
 # Add counts
-labeling_cells(text=source.type.pub, gp_text=gpar(fontsize=7, fontfamily="Frutiger LT Std 45 Light"))(source.type.pub)
+labeling_cells(text=source.type.pub, 
+               gp_text=gpar(fontsize=7, fontfamily="Frutiger LT Std 45 Light", col="#ffffff"))(source.type.pub)
 final.mosaic <- recordPlot()
 dev.off()
 
@@ -465,10 +469,10 @@ dev.off()
 # Output nice proportion table
 nice.table <- as.data.frame(addmargins(prop.table(source.type.pub, 2), 1)) %>%
   mutate(Freq = paste(round(Freq*100, 2), "%", sep=""))
-nice.table <- dcast(nice.table, publication ~ source_type, value.var="Freq") %>%
-  select(Publication = publication, 2:4)
-cat(pandoc.table.return(nice.table, justify=c("left", rep("center", 3)), 
-                        split.tables=Inf, caption="Percent of source type per publication"),
+nice.table <- dcast(nice.table, source_type ~ publication, value.var="Freq") %>%
+  rename(`Source Type` = source_type)
+cat(pandoc.table.return(nice.table, justify=c("left", rep("center", 4)), 
+                        split.tables=Inf, caption="Frequency of source type by publication {#tbl:source_publication}"),
     file="../Output/table_source_publication.md")
 
 
@@ -519,13 +523,13 @@ plot.pub.topics <- plot.pub.topics %>%
   mutate(label.ahram = factor(label, levels=ahram.order$label, ordered=TRUE))
 
 p <- ggplot(plot.pub.topics, aes(x=label.ahram, y=proportion, colour=publication))
-plot.topic.pub <- p + geom_point(aes(size=dirichlet), alpha=0.9) + 
-  labs(x=NULL, y="Mean proportion of topic in corpus") + 
+plot.topic.pub <- p + geom_point(size=4, alpha=0.9) + 
+  labs(x=NULL, y="Mean proportion of topic in articles that mention NGOs") + 
   coord_flip() + scale_y_continuous(labels=percent, 
                                     breaks=seq(0.02, 0.1, by=0.02)) + 
   scale_colour_manual(values=publication.colors, name="") + 
-  scale_size_continuous(range = c(2, 7), 
-                        name=expression(paste("Proportion (", alpha, ")"))) + 
+  # scale_size_continuous(range = c(2, 7), 
+                        # name=expression(paste("Proportion (", alpha, ")"))) + 
   theme_clean(8) + theme_dotplot
 
 ggsave(plot.topic.pub, filename="../Output/plot_topic_pub.png", 
@@ -565,13 +569,13 @@ plot.data <- melt(comb.org.pub.topics, measure.vars=4:23,
 #   mutate(label.ahram = factor(label, levels=ahram.order$label, ordered=TRUE))
 
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=publication))
-plot.topic.pub.org <- p + geom_point(aes(size=dirichlet), alpha=0.9) + 
-  labs(x=NULL, y="Mean proportion of topic in corpus") + 
+plot.topic.pub.org <- p + geom_point(size=2, alpha=0.9) + 
+  labs(x=NULL, y="Mean proportion of topic in articles that mention NGOs") + 
   theme_clean(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) +
   scale_colour_manual(values=publication.colors, name="") + 
-  scale_size_continuous(range = c(2, 7), 
-                        name=expression(paste("Proportion (", alpha, ")"))) + 
+  # scale_size_continuous(range = c(2, 7), 
+                        # name=expression(paste("Proportion (", alpha, ")"))) + 
   facet_wrap(~ organization)
 
 ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.png", 
@@ -579,10 +583,6 @@ ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.png",
 ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.pdf", 
        width=6.5, height=6, units="in", device=cairo_pdf)
 
-
-#-------
-# Poop
-#-------
 
 #--------------------------------------
 # Plot average topics per source type
@@ -618,14 +618,14 @@ plot.source.topics <- plot.source.topics %>%
   mutate(label.quote = factor(label, levels=quote.order$label, ordered=TRUE))
 
 p <- ggplot(plot.source.topics, aes(x=label.quote, y=proportion, colour=source_type))
-plot.topic.source <- p + geom_point(aes(size=dirichlet), alpha=0.9) + 
-  labs(x=NULL, y="Mean proportion of topic in corpus") + 
+plot.topic.source <- p + geom_point(size=4, alpha=0.9) + 
+  labs(x=NULL, y="Mean proportion of topic in articles that mention NGOs") + 
   theme_clean(8) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent,
                                     breaks=seq(0.02, 0.1, by=0.02)) + 
-  scale_colour_manual(values=source.colors, name="") + 
-  scale_size_continuous(range = c(2, 7), 
-                        name=expression(paste("Proportion (", alpha, ")")))
+  scale_colour_manual(values=source.colors, name="") #+ 
+  # scale_size_continuous(range = c(2, 7), 
+                        # name=expression(paste("Proportion (", alpha, ")")))
 
 ggsave(plot.topic.source, filename="../Output/plot_topic_source.png", 
        width=5.5, height=4, units="in")

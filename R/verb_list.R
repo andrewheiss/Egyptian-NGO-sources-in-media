@@ -10,7 +10,7 @@ verbs <- read.csv("../Output/verb_list.csv", header=TRUE) %>%
 colnames(verbs) <- c("Verb", "Count")
 
 cat(pandoc.table.return(cbind(verbs[1:7,], verbs[8:14,], verbs[15:21,]), 
-                        caption="Most common verbs in sentences that mention NGOs"), 
+                        caption="Most common verbs in sentences that mention NGOs {#tbl:verbs}"), 
     file="../Output/table_verbs.md")
 
 
@@ -24,6 +24,6 @@ ngo.output <- matrix(c(sort(ngos), rep(NA, cells.to.add)), ncol=num.columns, byr
 
 # Markdown
 cat(pandoc.table.return(ngo.output, split.tables=Inf, 
-                        justify="left", caption="List of NGOs"),
+                        justify="left", caption="List of NGOs {tbl:ngo_list}"),
     file="../Output/table_ngo_list.md")
 
