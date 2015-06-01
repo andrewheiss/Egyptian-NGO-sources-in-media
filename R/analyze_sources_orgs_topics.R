@@ -146,11 +146,11 @@ source.colors <- c("#000000", "#636363", "#cccccc")
 # validation.color <- "#8e6010"
 validation.color <- "#252525"
 
-theme_clean <- function(base_size=12, base_family="Frutiger LT Std 45 Light") {
+theme_clean <- function(base_size=12, base_family="Gill Sans") {
   ret <- theme_bw(base_size, base_family) + 
     theme(panel.background = element_rect(fill="#ffffff", colour=NA),
           axis.title.x=element_text(vjust=-0.2), axis.title.y=element_text(vjust=1.5),
-          title=element_text(vjust=1.2, family="FrutigerLTStd-Bold", face="bold"),
+          title=element_text(vjust=1.2, family="Gill Sans", face="bold"),
           panel.border = element_blank(), axis.line=element_blank(),
           panel.grid.minor=element_blank(),
           panel.grid.major.y = element_blank(),
@@ -158,9 +158,9 @@ theme_clean <- function(base_size=12, base_family="Frutiger LT Std 45 Light") {
           axis.ticks=element_blank(),
           legend.position="bottom", 
           axis.title=element_text(size=rel(0.8), 
-                                  family="FrutigerLTStd-Bold", face="bold"),
+                                  family="Gill Sans", face="bold"),
           strip.text=element_text(size=rel(0.9), 
-                                  family="FrutigerLTStd-Bold", face="bold"),
+                                  family="Gill Sans", face="bold"),
           strip.background=element_rect(fill="#ffffff", colour=NA),
           panel.margin=unit(1, "lines"), legend.key.size=unit(.7, "line"),
           legend.key=element_blank())
@@ -219,13 +219,13 @@ article.validation <- p + geom_bar(stat="identity") +
   coord_flip() + facet_wrap(~ article_id) + 
   scale_y_continuous(labels=percent) + 
   scale_fill_manual(values=publication.colors, guide=FALSE) + 
-  labs(y="Proportion of topic in article", x=NULL) + theme_clean(8)
+  labs(y="Proportion of topic in article", x=NULL) + theme_clean(7)
 
 # TODO: ggsave outputs PNGs that are inexplicably gigantic. See http://mcfromnz.wordpress.com/2013/09/03/ggplot-powerpoint-wall-head-solution/
 ggsave(article.validation, filename="../Output/plot_article_validation.png", 
-       width=6.5, height=4, units="in")
+       width=4.7, height=3, units="in")
 ggsave(article.validation, filename="../Output/plot_article_validation.pdf", 
-       width=6.5, height=4, units="in", device=cairo_pdf)
+       width=4.7, height=3, units="in", device=cairo_pdf)
 
 
 #----------------------------------
@@ -259,12 +259,12 @@ org.topic.validation <- p +
              colour="grey80", linetype="dotted", size=0.25) + 
   labs(x=NULL, y="Mean proportion of topic in corpus") + 
   coord_flip() + facet_wrap(~ label) + 
-  theme_clean(8) + scale_y_continuous(labels=percent)
+  theme_clean(7) + scale_y_continuous(labels=percent)
 
 ggsave(org.topic.validation, filename="../Output/plot_org_topic_validation.png", 
-       width=5.5, height=3, units="in")
+       width=4.7, height=2.5, units="in")
 ggsave(org.topic.validation, filename="../Output/plot_org_topic_validation.pdf", 
-       width=5.5, height=3, units="in", device=cairo_pdf)
+       width=4.7, height=2.5, units="in", device=cairo_pdf)
 
 
 #----------------------------------------
@@ -353,13 +353,13 @@ sources.over.time <- p + geom_line(size=1) +
   scale_x_date(breaks="3 months", labels=date_format("%B %Y")) + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y="Proportion of articles that source NGOs") + 
   scale_colour_manual(values=publication.colors, name="") + 
-  theme_clean(8) + theme(legend.key = element_blank(),
+  theme_clean(7) + theme(legend.key = element_blank(),
                          panel.grid.major.y = element_line(size=0.25, colour="grey90"))
 
 ggsave(plot=sources.over.time, filename="../Output/plot_sources_time.png", 
-       width=5.5, height=3, units="in")
+       width=4.7, height=2.5, units="in")
 ggsave(plot=sources.over.time, filename="../Output/plot_sources_time.pdf", 
-       width=5.5, height=3, units="in", device=cairo_pdf)
+       width=4.7, height=2.5, units="in", device=cairo_pdf)
 
 
 #----------------------------------------
@@ -388,12 +388,12 @@ p <- ggplot(plot.data, aes(x=Organization, y=value, fill=variable))
 plot.source.organization <- p + geom_bar(stat="identity", position="dodge") + 
   coord_flip() + labs(x=NULL, y="Number of articles") + 
   scale_fill_manual(values=publication.colors, name="") + 
-  theme_clean(8) + theme(legend.key = element_blank())
+  theme_clean(7) + theme(legend.key = element_blank())
 
 ggsave(plot=plot.source.organization, filename="../Output/plot_source_organization.png", 
-       width=5.5, height=4, units="in")
+       width=4.7, height=3, units="in")
 ggsave(plot=plot.source.organization, filename="../Output/plot_source_organization.pdf", 
-       width=5.5, height=4, units="in", device=cairo_pdf)
+       width=4.7, height=3, units="in", device=cairo_pdf)
 
 source.summary <- rbind(source.summary, c("Total", sum(source.summary[,2]), 
                                           sum(source.summary[,3]), 
@@ -445,13 +445,13 @@ mosaic(source.type.pub, pop=FALSE,
        labeling_args=list(set_varnames=c(source_type="Type of source", 
                                          publication="Publication"),
                           gp_labels=(gpar(fontsize=7, 
-                                          fontfamily="Frutiger LT Std 45 Light"))), 
+                                          fontfamily="Gill Sans"))), 
        gp=gpar(fill=cell.colors, col="#ffffff"), margins=unit(c(2, 0, 0, 0), "lines"),
-       gp_varnames=gpar(fontsize=8, fontface=2, fontfamily="FrutigerLTStd-Bold"))
+       gp_varnames=gpar(fontsize=8, fontface=2, fontfamily="Gill Sans"))
 
 # Add counts
 labeling_cells(text=source.type.pub, 
-               gp_text=gpar(fontsize=7, fontfamily="Frutiger LT Std 45 Light", col="#ffffff"))(source.type.pub)
+               gp_text=gpar(fontsize=7, fontfamily="Gill Sans", col="#ffffff"))(source.type.pub)
 final.mosaic <- recordPlot()
 dev.off()
 
@@ -492,13 +492,13 @@ plot.source.pub <- p + geom_bar(aes(y=(Freq)/sum(Freq)),
   scale_y_continuous(labels=percent) + 
   scale_fill_manual(values=publication.colors, name="") + 
   facet_wrap(~ source_type) + 
-  theme_clean(8) + theme(panel.grid.major.y = element_line(size=0.25, colour="grey90"),
+  theme_clean(7) + theme(panel.grid.major.y = element_line(size=0.25, colour="grey90"),
                          panel.grid.major.x = element_blank())
 
 ggsave(plot.source.pub, filename="../Output/plot_source_pub.png", 
-       width=5.5, height=3, units="in")
+       width=4.7, height=2.5, units="in")
 ggsave(plot.source.pub, filename="../Output/plot_source_pub.pdf", 
-       width=5.5, height=3, units="in", device=cairo_pdf)
+       width=4.7, height=2.5, units="in", device=cairo_pdf)
 
 
 #--------------------------------------
@@ -530,12 +530,12 @@ plot.topic.pub <- p + geom_point(size=4, alpha=0.9) +
   scale_colour_manual(values=publication.colors, name="") + 
   # scale_size_continuous(range = c(2, 7), 
                         # name=expression(paste("Proportion (", alpha, ")"))) + 
-  theme_clean(8) + theme_dotplot
+  theme_clean(7) + theme_dotplot
 
 ggsave(plot.topic.pub, filename="../Output/plot_topic_pub.png", 
-       width=5.5, height=4, units="in")
+       width=4.7, height=3.5, units="in")
 ggsave(plot.topic.pub, filename="../Output/plot_topic_pub.pdf", 
-       width=5.5, height=4, units="in", device=cairo_pdf)
+       width=4.7, height=3.5, units="in", device=cairo_pdf)
 
 
 #-------------------------------------------------
@@ -571,7 +571,7 @@ plot.data <- melt(comb.org.pub.topics, measure.vars=4:23,
 p <- ggplot(plot.data, aes(x=label.rev, y=proportion, color=publication))
 plot.topic.pub.org <- p + geom_point(size=2, alpha=0.9) + 
   labs(x=NULL, y="Mean proportion of topic in articles that mention NGOs") + 
-  theme_clean(8) + theme_dotplot + 
+  theme_clean(6) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent) +
   scale_colour_manual(values=publication.colors, name="") + 
   # scale_size_continuous(range = c(2, 7), 
@@ -579,9 +579,9 @@ plot.topic.pub.org <- p + geom_point(size=2, alpha=0.9) +
   facet_wrap(~ organization)
 
 ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.png", 
-       width=6.5, height=6, units="in")
+       width=4.7, height=5, units="in")
 ggsave(plot.topic.pub.org, filename="../Output/plot_topic_pub_org.pdf", 
-       width=6.5, height=6, units="in", device=cairo_pdf)
+       width=4.7, height=5, units="in", device=cairo_pdf)
 
 
 #--------------------------------------
@@ -620,7 +620,7 @@ plot.source.topics <- plot.source.topics %>%
 p <- ggplot(plot.source.topics, aes(x=label.quote, y=proportion, colour=source_type))
 plot.topic.source <- p + geom_point(size=4, alpha=0.9) + 
   labs(x=NULL, y="Mean proportion of topic in articles that mention NGOs") + 
-  theme_clean(8) + theme_dotplot + 
+  theme_clean(7) + theme_dotplot + 
   coord_flip() + scale_y_continuous(labels=percent,
                                     breaks=seq(0.02, 0.1, by=0.02)) + 
   scale_colour_manual(values=source.colors, name="") #+ 
@@ -628,6 +628,6 @@ plot.topic.source <- p + geom_point(size=4, alpha=0.9) +
                         # name=expression(paste("Proportion (", alpha, ")")))
 
 ggsave(plot.topic.source, filename="../Output/plot_topic_source.png", 
-       width=5.5, height=4, units="in")
+       width=4.7, height=3.5, units="in")
 ggsave(plot.topic.source, filename="../Output/plot_topic_source.pdf", 
-       width=5.5, height=4, units="in", device=cairo_pdf)
+       width=4.7, height=3.5, units="in", device=cairo_pdf)
